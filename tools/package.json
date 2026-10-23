@@ -1,0 +1,13 @@
+{
+  "name": "rts-compact-5-model-tools",
+  "private": true,
+  "type": "module",
+  "description": "Converts the SolidWorks STEP assembly into the compressed GLB used by the viewer.",
+  "dependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "meshoptimizer": "^1.3.0",
+    "occt-import-js": "^0.0.23"
+  }
+}

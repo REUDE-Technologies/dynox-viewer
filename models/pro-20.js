@@ -1,0 +1,393 @@
+// RTS Pro 20 — 20 kgf thrust and torque stand.
+// Component text follows the ROTRIX Flight Bench 20 User Manual (RFB20UM-2025-01-27) assembly steps;
+// dimensions and quantities are measured from the 3D model.
+// Coordinates: millimetres, Y up, thrust axis +Z (propeller faces +Z).
+import G from './pro-20.nodes.js';
+
+// Orange slot-cover strips (one mesh per extrusion, appended to the GLB) travel with their profile.
+const COVERS = { rail_L: 915, rail_R: 916, pillar_L: 917, pillar_R: 918, out_L: 919, out_R: 920, strut_FL: 921, strut_SL: 922,
+  strut_FR: 923, strut_RL: 924, strut_RR: 925, strut_SR: 926, bridge_low: 927, xj_front: 928, xj_rear: 929 };
+const P = Object.fromEntries(Object.entries(G.pieces).map(([k, v]) => [k, COVERS[k] ? [...v, COVERS[k]] : v]));
+const COVER_NODES = Object.values(COVERS);
+
+// Exploded view: every move is parallel to the side view plane (Y up, Z along thrust),
+// and each sub-assembly moves as one block.
+const EX = {
+  foot_FL: [0, 0, 90], foot_FR: [0, 0, 90], foot_RL: [0, 0, -90], foot_RR: [0, 0, -90],
+  strut_FL: [0, 0, 170], strut_FR: [0, 0, 170], strut_RL: [0, 0, -170], strut_RR: [0, 0, -170],
+  strut_SL: [0, 170, 0], strut_SR: [0, 170, 0],
+  bridge_low: [0, 0, -160], bridge_top: [0, 0, -160],
+  handle_L: [0, 0, -150], handle_R: [0, 0, -150],
+  daq: [0, 0, -330],
+  mount: [0, 70, 0], carrier: [0, 70, 110], plate: [0, 70, 210],
+  motor: [0, 70, 290], rpm: [0, 70, 290], prop: [0, 70, 390],
+  encl: [0, 250, 0],
+};
+
+// Table layout: diagonal braces are rotated about their own axis to lie flat.
+const FLAT = {
+  strut_FL: [['x', 45]], strut_FR: [['x', 45]], strut_RL: [['x', -45]], strut_RR: [['x', -45]],
+  strut_SL: [['z', -45]], strut_SR: [['z', 45]],
+};
+
+// Order = order of laying out on the table (manual step order).
+const ORDER = [
+  'rail_L', 'rail_R', 'pillar_L', 'pillar_R', 'prop',
+  'strut_FL', 'strut_FR', 'strut_RL', 'strut_RR', 'strut_SL', 'strut_SR',
+  'out_L', 'out_R', 'xj_front', 'xj_rear', 'bridge_low', 'bridge_top',
+  'encl', 'plate', 'carrier', 'motor', 'daq', 'mount', 'rpm',
+  'handle_L', 'handle_R', 'foot_FL', 'foot_FR', 'foot_RL', 'foot_RR', 'foot_OL', 'foot_OR',
+];
+
+const pieces = ORDER.map((id) => ({ id, nodes: P[id], ex: EX[id] || [0, 0, 0], flat: FLAT[id] }));
+const N = (...ids) => ids.flatMap((id) => G.pieces[id]); // a piece's own nodes, without its slot covers
+const plateOnly = P.plate.filter((i) => !G.board.includes(i));
+
+export default {
+  id: 'pro-20',
+  title: 'RTS Pro 20',
+  subtitle: '20 kgf thrust and torque stand',
+  url: 'model/rts-pro-20.glb',
+  views: {
+    iso: [-1, 0.55, 1.15],
+    side: [-1, 0.05, 0.0001],
+    front: [0.0001, 0.05, 1],
+    top: [0.0005, 1, 0.001],
+    table: [-0.85, 1.25, 1.05],
+  },
+  explodeView: 'side',
+  hidden: P.sample, // small motor floating behind the head in the CAD file: not part of the product
+  matOverrides: G.mats,
+  sections: [
+    { id: 'base', name: 'Base frame', note: 'Manual steps 1 and 2' },
+    { id: 'tower', name: 'Pillar tower and bracing', note: 'Manual steps 3 to 5' },
+    { id: 'head', name: 'Sensing head and propulsion', note: 'Manual step 6' },
+    { id: 'elec', name: 'Electronics', note: 'Manual step 7' },
+    { id: 'hw', name: 'Brackets and fixings' },
+  ],
+  pieces,
+  items: [
+    {
+      s: 'base', name: 'Base cross-joints', code: 'SUB-ASSY-001 · Profile B with 90° brackets',
+      qty: 2, mat: 'alu', nodes: N('xj_front', 'xj_rear'),
+      summary: 'Short connectors that tie the two base rails together at each end, turning them into one rigid ladder frame.',
+      size: '40 × 40 × 85 mm profile, two 90° corner brackets each',
+      material: 'Anodised aluminium extrusion, die-cast aluminium brackets',
+      level: 'Important',
+      why: 'They keep the rails parallel and square. A loose joint lets the frame rack, which tilts the thrust line and makes readings drift.',
+      steps: [
+        'Slide one T-nut into the top slot on each side of the short profile.',
+        'Hold a 90° bracket flush against each side and line its hole up with the nut.',
+        'Fit an M8 bolt through each bracket and tighten until snug. Do not over-tighten.',
+        'Build a second identical joint.',
+      ],
+    },
+    {
+      s: 'base', name: 'Base rails', code: 'SKU-EX40A · Profile A',
+      qty: 2, mat: 'alu', nodes: N('rail_L', 'rail_R'),
+      summary: 'The two long aluminium rails that sit on the floor and carry the whole stand.',
+      size: '40 × 80 mm section, 1,100 mm long',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'Their length sets the footprint. Up to 20 kgf of thrust acts about one metre above the floor, and the rails are what stop that force from tipping the stand.',
+      steps: [
+        'Insert T-nuts into both ends of each rail first. They cannot be added once brackets close the slot.',
+        'Place a cross-joint between the rails at each end, flush with the central slot.',
+        'Bolt the cross-joint brackets into the rail nuts.',
+        'Check the frame sits flat with no wobble before going further.',
+      ],
+    },
+    {
+      s: 'base', name: 'Side stabiliser arms', code: '40 × 40 profile',
+      qty: 2, mat: 'alu', nodes: N('out_L', 'out_R'),
+      summary: 'Arms on either side of the base that widen the footprint against sideways load and motor torque.',
+      size: '40 × 40 × 300 mm',
+      material: 'Anodised aluminium extrusion',
+      level: 'Important',
+      why: 'Motor torque tries to roll the stand sideways. The arms give it a wide stance so it stays planted at full power.',
+      steps: [
+        'Fit T-nuts into the arm slots.',
+        'Bolt each arm square to the outer face of a base rail, in line with the pillars.',
+        'Check both arms sit level with the rails.',
+      ],
+    },
+    {
+      s: 'base', name: 'Floor hold-down clamps', code: 'Anchor clamps',
+      qty: 6, mat: 'black', nodes: N('foot_FL', 'foot_FR', 'foot_RL', 'foot_RR', 'foot_OL', 'foot_OR'),
+      summary: 'Clamps that lock the base to the floor or bench so the stand cannot lift or slide during a run.',
+      size: '4 × 165 × 40 mm on the rail ends, 2 × 125 × 30 mm on the arm ends',
+      material: 'Steel clamp plate',
+      level: 'Critical',
+      why: 'Thrust tries to lift and slide the stand. Anchoring it keeps the measurement clean and keeps the test area safe.',
+      steps: [
+        'Set the base on a level, solid surface.',
+        'Place a clamp over each rail end and each arm end.',
+        'Anchor every clamp to the floor (M12 anchors on concrete) and tighten evenly.',
+      ],
+    },
+    {
+      s: 'tower', name: 'Pillars', code: 'SKU-EX40A · Profile A',
+      qty: 2, mat: 'alu', nodes: N('pillar_L', 'pillar_R'),
+      summary: 'Twin vertical columns that lift the motor into clean air, well clear of the floor.',
+      size: '40 × 80 × 1,000 mm',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'They hold the propeller axis about 1.1 m above the floor, away from ground effect, and carry all the thrust down into the base. Pillars that are out of square tilt the thrust line and add error.',
+      steps: [
+        'Insert T-nuts at the pillar feet and the matching base slots.',
+        'Stand both pillars upright at the centre of the base.',
+        'Fix each foot with four 90° corner brackets and M8 bolts.',
+        'Check the pillars are vertical and parallel, then tighten fully.',
+      ],
+    },
+    {
+      s: 'tower', name: 'Diagonal braces', code: '40 × 40 profile at 45°',
+      qty: 6, mat: 'alu',
+      nodes: N('strut_FL', 'strut_FR', 'strut_RL', 'strut_RR', 'strut_SL', 'strut_SR'),
+      summary: 'Angled struts that turn the frame into rigid triangles, front, back and sides.',
+      size: '40 × 40 mm profile, about 400 mm long, 45° brackets at each end',
+      material: 'Anodised aluminium extrusion, die-cast aluminium brackets',
+      level: 'Critical',
+      why: 'Triangles are the stiffest shape in a structure. The braces damp motor vibration and stop fore-aft and sideways sway, so the load cells read thrust, not wobble.',
+      steps: [
+        'Fit a 45° end bracket at each end of the brace.',
+        'Slide T-nuts into the base and pillar slots where the brackets will land.',
+        'Offer the brace in at 45° and bolt both ends with M8 bolts.',
+        'Repeat for all six braces, tighten evenly, then recheck that the pillars are vertical.',
+      ],
+    },
+    {
+      s: 'tower', name: 'Pillar bridges', code: 'SKU-EX40D-0085 · Profile D',
+      qty: 2, mat: 'alu', nodes: N('bridge_low', 'bridge_top'),
+      summary: 'Short cross-pieces that tie the twin pillars into one stiff tower.',
+      size: '40 × 40 × 85 mm',
+      material: 'Anodised aluminium extrusion',
+      level: 'Important',
+      why: 'They stop the pillars twisting or spreading under oscillating load. The upper bridge also carries the sensing head.',
+      steps: [
+        'Slide T-nuts into the inner faces of both pillars at the bridge heights.',
+        'Place each bridge between the pillars, level and centred.',
+        'Fix with 90° corner brackets and M8 bolts.',
+        'Recheck that the pillars are parallel before the final tightening.',
+      ],
+    },
+    {
+      s: 'tower', name: 'Slot cover strips', code: 'Orange T-slot covers · REUDE standard',
+      qty: '1 set', mat: 'slotcover', nodes: COVER_NODES,
+      summary: 'Orange cover strips pressed into every open T-slot of the aluminium frame. They are a standard feature of every DynoX stand.',
+      size: '9 mm wide, cut to length for each exposed slot',
+      material: 'Flexible PVC, REUDE orange',
+      level: 'Standard',
+      why: 'They keep dust, swarf and small parts out of the slots, cover the sharp slot edges, hold cables neatly, and give the stand its signature orange accent.',
+      steps: [
+        'Fit the strips after the frame is fully tightened and the cables are routed.',
+        'Press each strip into its slot by hand, starting at one end and working along.',
+        'Cut it flush at brackets and profile ends with a sharp knife.',
+        'Lift a strip out when you need to reach the slot, then press it back in.',
+      ],
+    },
+    {
+      s: 'tower', name: 'Carry handles', code: 'Pillar grips',
+      qty: 2, mat: 'black', nodes: N('handle_L', 'handle_R'),
+      summary: 'A grip on each pillar for lifting and positioning the stand.',
+      size: 'About 145 mm long',
+      material: 'Moulded handle with steel screws',
+      level: 'Standard',
+      why: 'Makes the stand easier and safer to move. Handles are outside the load path and do not affect measurement.',
+      steps: [
+        'Slide two T-nuts into the outer slot of each pillar.',
+        'Screw the handle on at a comfortable height.',
+      ],
+    },
+    {
+      s: 'head', name: 'Head mounting bracket', code: 'Gusseted mount',
+      qty: 1, mat: 'alu', nodes: N('mount'),
+      summary: 'A stiff, gusseted bracket that seats the sensing head on top of the tower.',
+      size: '80 × 60 mm base with side gussets',
+      material: 'Aluminium',
+      level: 'Critical',
+      why: 'It is the only link between the sensors and the frame. Any play here appears as noise in the thrust and torque readings.',
+      steps: [
+        'Slide T-nuts into the top bridge.',
+        'Seat the bracket on the bridge and tighten its bolts.',
+        'Check it is square to the pillars before fitting the sensor block.',
+      ],
+    },
+    {
+      s: 'head', name: 'Load-cell sensor block', code: 'Thrust and torque sensing',
+      qty: '1 block, 3 load cells', mat: 'alu', nodes: N('carrier'),
+      matOverrides: { 104: 'cell', 105: 'cell', 106: 'cell' },
+      summary: 'Factory-calibrated load cells that measure thrust and torque together. This is the heart of the stand.',
+      size: 'Carrier 200 × 90 × 70 mm, load cells 32 × 32 × 130 mm',
+      material: 'Aluminium carrier, precision strain-gauge load cells',
+      level: 'Critical',
+      why: 'The load cells turn up to 20 kgf of thrust, and the motor’s reaction torque, into electrical signals at ±0.5% of full scale. Every result the stand produces depends on them.',
+      steps: [
+        'Keep the block assembled. The load cells are fitted and calibrated at the factory.',
+        'Bolt the block onto the mounting bracket with the motor face pointing forward.',
+        'Route the cables to the DAQ unit without tension. A taut or looped cable can carry load and skew readings.',
+        'Run the calibration check in ROTRIX once assembly is complete.',
+      ],
+    },
+    {
+      s: 'head', name: 'Motor mounting plate', code: 'Motor interface',
+      qty: 1, mat: 'alu', nodes: plateOnly,
+      matOverrides: { 795: 'dark', 798: 'dark', 796: 'dark', 797: 'dark' },
+      summary: 'The plate your test motor bolts onto. It passes thrust and torque straight into the load cells.',
+      size: '200 × 207 mm plate with two clamp housings',
+      material: 'Aluminium plate',
+      level: 'Critical',
+      why: 'Its large, stiff face keeps the motor square to the measurement axis, so all of the thrust is measured and none is lost to flex.',
+      steps: [
+        'Bolt the motor to the plate with M6 bolts on its mounting pattern.',
+        'Fit the plate to the front of the load-cell block.',
+        'Check the motor shaft is centred and square to the plate.',
+      ],
+    },
+    {
+      s: 'head', name: 'Test motor', code: 'Brushless outrunner (reference)',
+      qty: 1, mat: 'motor', nodes: N('motor'),
+      summary: 'A large brushless motor shown as a typical 20 kgf-class test unit. Your own motor fits in its place.',
+      size: 'Ø145 × 56 mm',
+      material: 'Brushless DC motor',
+      level: 'Important',
+      why: 'This is the unit under test. Any motor within the 20 kgf rating can be fitted to the mounting plate.',
+      steps: [
+        'Bolt it to the mounting plate with M6 bolts.',
+        'Connect the motor phases to your ESC.',
+        'Turn it by hand to confirm it spins freely before power-up.',
+      ],
+    },
+    {
+      s: 'head', name: 'Propeller and hub', code: 'Two-blade, about 40 inch',
+      qty: '2 blades + hub', mat: 'carbon', nodes: N('prop'),
+      matOverrides: { 894: 'fastener', 896: 'fastener' },
+      summary: 'A large two-blade propeller, about one metre across, shown as the reference load.',
+      size: 'About 1,030 mm diameter',
+      material: 'Carbon-fibre composite blades, metal hub adapter',
+      level: 'Critical',
+      why: 'At full power the blade tips move very fast. Good balance, tight hub bolts and a clear zone around the disc are essential for safety and clean vibration data.',
+      steps: [
+        'Fit the hub adapter to the motor shaft.',
+        'Mount the blades and tighten the hub bolts evenly.',
+        'Check balance and tip clearance before every run.',
+        'Keep everyone out of the propeller plane while testing.',
+      ],
+    },
+    {
+      s: 'head', name: 'Optical RPM sensor', code: 'IR blade counter',
+      qty: 1, mat: 'printed', nodes: N('rpm'),
+      summary: 'A non-contact sensor on a short arm that counts blade passes to measure motor speed.',
+      size: '105 mm arm with IR sensor head',
+      material: '3D-printed arm, optical IR sensor',
+      level: 'Important',
+      why: 'Speed (0 to 25,000 RPM, ±1%) is needed for efficiency figures and thrust-versus-RPM curves.',
+      steps: [
+        'Fix the arm to the head on the propeller side.',
+        'Aim the sensor at the blade path, close to it but clear of the blade tips.',
+        'Plug it into the RPM input on the DAQ unit.',
+      ],
+    },
+    {
+      s: 'head', name: 'Sensing-head cover', code: 'Protective housing',
+      qty: 1, mat: 'cover', nodes: N('encl'),
+      summary: 'A protective housing around the sensing head and its wiring.',
+      size: '251 × 261 × 98 mm',
+      material: 'Powder-coated sheet metal',
+      level: 'Standard',
+      why: 'It shields the load cells and wiring from dust, knocks and propeller wash, which keeps readings stable.',
+      steps: [
+        'Fit it after the sensor block and wiring are complete.',
+        'Secure it with its screws, making sure no cable is trapped under the edge.',
+      ],
+    },
+    {
+      s: 'elec', name: 'ROTRIX DAQ unit', code: 'STM32-based data acquisition',
+      qty: 1, mat: 'black', nodes: N('daq'),
+      summary: 'The electronics box that reads every sensor and streams live data to the ROTRIX software.',
+      size: '88 × 143 × 38 mm',
+      material: 'Custom PCB with signal conditioning, in an enclosure',
+      level: 'Critical',
+      why: 'It samples thrust, torque, RPM, voltage, current, vibration and temperature in sync, filters and protects the signals, and sends them to your PC over USB.',
+      steps: [
+        'Mount it on the rear face of the pillars at mid height.',
+        'Connect the load-cell, RPM, voltage, current and sensor leads.',
+        'Connect it to the PC over USB and power it up.',
+        'Confirm in ROTRIX that every sensor is detected before testing.',
+      ],
+    },
+    {
+      s: 'elec', name: 'Motor-side sensor board', code: 'Vibration and temperature',
+      qty: 1, mat: 'pcb', nodes: G.board,
+      summary: 'A small board on the motor plate that monitors vibration and temperature close to the motor.',
+      size: '52 × 50 mm PCB',
+      material: 'FR-4 circuit board',
+      level: 'Important',
+      why: 'Placed close to the motor, it catches imbalance and overheating early, before they damage the motor or the stand.',
+      steps: [
+        'Comes fitted to the mounting plate.',
+        'Plug its lead into the matching DAQ channel.',
+        'Route the lead well clear of the propeller disc.',
+      ],
+    },
+    {
+      s: 'hw', kind: 'hw', name: '90° corner brackets', code: 'SKU-CB90L-0035',
+      qty: 19, mat: 'bracket', nodes: G.hw.cb90,
+      summary: 'Right-angle brackets that join profiles at 90°, at the base joints, pillar feet and bridges.',
+      size: '40 × 40 × 35 mm',
+      material: 'Die-cast aluminium',
+      level: 'Important',
+      why: 'They set the squareness of every right-angle joint in the frame.',
+      steps: [
+        'Load the T-nuts into the slot before the bracket closes off access.',
+        'Seat the bracket flush on both profiles, then tighten its M8 bolts.',
+      ],
+    },
+    {
+      s: 'hw', kind: 'hw', name: '45° brace brackets', code: 'Diagonal end brackets',
+      qty: 12, mat: 'bracket', nodes: G.hw.ab45big,
+      summary: 'Angled brackets that fix both ends of each diagonal brace.',
+      size: '35 × 58 × 80 mm',
+      material: 'Die-cast aluminium',
+      level: 'Important',
+      why: 'They hold each brace at exactly 45°, which is what makes the bracing effective.',
+      steps: ['Fit to the brace ends first, then bolt into the base and pillar slots.'],
+    },
+    {
+      s: 'hw', kind: 'hw', name: '45° angle bracket sets', code: 'SKU-AB45L-0005',
+      qty: '8 sets', mat: 'bracket', nodes: [...G.hw.ab45, ...G.hw.washer],
+      summary: 'Small angle brackets with clamping wedges at the rail ends and on the pillars.',
+      size: 'About 21 × 24 × 24 mm',
+      material: 'Die-cast aluminium with steel bolt and washer',
+      level: 'Standard',
+      why: 'They lock secondary joints against slip under vibration.',
+      steps: ['Fit with the wedge seated in the profile slot and tighten the bolt firmly.'],
+    },
+    {
+      s: 'hw', kind: 'hw', name: 'T-slot sliding nuts', code: 'SKU-SN90T-0019',
+      qty: 42, mat: 'fastener', nodes: G.hw.tnut,
+      summary: 'Nuts that slide inside the profile slots and receive every bracket bolt.',
+      size: '19.5 × 19.5 × 9.5 mm',
+      material: 'Zinc-plated steel',
+      level: 'Critical',
+      why: 'They must go into the slot before brackets or end parts close it. A forgotten nut means taking the joint apart again.',
+      steps: [
+        'Count them against the checklist before starting.',
+        'Insert them at each step, before the slot is closed, and slide them roughly into position.',
+      ],
+    },
+    {
+      s: 'hw', kind: 'hw', name: 'M8 button-head bolts', code: 'SKU-BB08M-0010',
+      qty: 49, mat: 'fastener', nodes: [...G.hw.bolt, ...G.hw.hscrew],
+      summary: 'Socket bolts that clamp the brackets to the profiles through the sliding nuts.',
+      size: 'M8 × 10 mm',
+      material: 'Steel, black oxide',
+      level: 'Important',
+      why: 'Even, correct tightness keeps the frame square. Over-tightening can strip threads or deform brackets.',
+      steps: [
+        'Thread into the sliding nut by hand first.',
+        'Tighten with a hex key until snug, working evenly around each joint.',
+      ],
+    },
+  ],
+};

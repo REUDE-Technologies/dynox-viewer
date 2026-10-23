@@ -1,0 +1,316 @@
+// RTS Ultra 50 — 50 kgf thrust and torque stand.
+// Dimensions and quantities are measured from the 3D model (SolidWorks export, flattened).
+// Coordinates: millimetres, Y up, thrust axis along -Z (the motor face points to -Z).
+import G from './ultra-50.nodes.js';
+
+// Orange slot-cover strips: one mesh per extrusion (appended to the GLB), moving with its profile.
+const COVERS = { base: 1227, beam: 1228, pillar_FL: 1229, pillar_FR: 1230, pillar_RR: 1231, pillar_RL: 1232,
+  out_RF: 1233, out_LF: 1234, out_RR: 1235, out_LR: 1236, brace_L: 1237, brace_R: 1238,
+  sbrace_RF: 1239, sbrace_LF: 1240, sbrace_RR: 1241, sbrace_LR: 1242 };
+const P = Object.fromEntries(Object.entries(G.pieces).map(([k, v]) => [k, COVERS[k] ? [...v, COVERS[k]] : v]));
+const COVER_NODES = Object.values(COVERS);
+const HEAD = 90; // the head lifts with the top beam in the exploded view
+
+// Exploded view: straight moves parallel to the side view (Y up, Z along thrust), whole sub-assemblies.
+const EX = {
+  base: [0, -120, 0],
+  out_RF: [0, -60, 0], out_LF: [0, -60, 0], out_RR: [0, -60, 0], out_LR: [0, -60, 0],
+  sbrace_RF: [0, 0, -80], sbrace_LF: [0, 0, -80], sbrace_RR: [0, 0, 80], sbrace_LR: [0, 0, 80],
+  brace_L: [0, -60, 110], brace_R: [0, -60, 110],
+  beam: [0, HEAD, 0], daq: [0, 190, 0],
+  cs_bot: [25, 0, 120], cs_pcb: [0, 0, 120], cs_top: [-25, 0, 120],
+  gusset: [0, HEAD, 0], vcell: [0, HEAD, -40], holder: [0, HEAD, -90], tcell: [0, HEAD, -140],
+  support: [0, HEAD, -190], vib: [0, HEAD + 60, -215], plate: [0, HEAD, -250], goose: [0, HEAD, -330],
+};
+// Table layout: braces are rotated about their own axis to lie flat.
+const FLAT = {
+  brace_L: [['x', -45]], brace_R: [['x', -45]],
+  sbrace_RF: [['z', 45]], sbrace_RR: [['z', 45]], sbrace_LF: [['z', -45]], sbrace_LR: [['z', -45]],
+};
+const ORDER = [
+  'base', 'pillar_FL', 'pillar_FR', 'pillar_RL', 'pillar_RR', 'beam', 'out_RF', 'out_LF', 'out_RR', 'out_LR',
+  'sbrace_RF', 'sbrace_LF', 'sbrace_RR', 'sbrace_LR', 'brace_L', 'brace_R',
+  'plate', 'support', 'tcell', 'holder', 'vcell', 'gusset', 'goose', 'vib', 'daq', 'cs_bot', 'cs_pcb', 'cs_top',
+];
+const pieces = ORDER.map((id) => ({ id, nodes: P[id], ex: EX[id] || [0, 0, 0], flat: FLAT[id] }));
+const N = (...ids) => ids.flatMap((id) => P[id]);
+const own = (...ids) => ids.flatMap((id) => G.pieces[id]); // a piece's own nodes, without its slot covers
+
+export default {
+  id: 'ultra-50',
+  title: 'RTS Ultra 50',
+  subtitle: '50 kgf thrust and torque stand',
+  url: 'model/rts-ultra-50.glb',
+  views: {
+    iso: [1, 0.55, -1.15],
+    side: [1, 0.05, 0.0001],
+    front: [0.0001, 0.05, -1],
+    top: [0.0005, 1, -0.001],
+    table: [0.85, 1.25, -1.05],
+  },
+  explodeView: 'side',
+  matOverrides: G.mats,
+  sections: [
+    { id: 'frame', name: 'Frame', note: 'Steps 1 to 5' },
+    { id: 'head', name: 'Sensing head', note: 'Steps 6 to 9' },
+    { id: 'elec', name: 'Electronics', note: 'Steps 10 and 11' },
+    { id: 'hw', name: 'Brackets and fixings' },
+  ],
+  pieces,
+  items: [
+    {
+      s: 'frame', name: 'Base rail', code: '40 × 120 aluminium extrusion',
+      qty: 1, mat: 'alu', nodes: [1048],
+      summary: 'A long, wide aluminium rail that forms the spine of the base and runs along the thrust direction.',
+      size: '40 × 120 mm section, 900 mm long',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'Up to 50 kgf of thrust acts high above the floor. The long rail turns that tipping force into a manageable load on the floor.',
+      steps: [
+        'Load T-nuts into the top slots at all four pillar positions and at the rear brace feet.',
+        'Place the rail on a level, rigid floor with the long end towards the rear.',
+      ],
+    },
+    {
+      s: 'frame', name: 'Side outriggers', code: '40 × 40 profile',
+      qty: 4, mat: 'alu', nodes: [1054, 1067, 1069, 1071],
+      summary: 'Four arms that stick out sideways at the front and rear pillars, giving the stand a wide, stable stance.',
+      size: '40 × 40 × 440 mm',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'Motor torque tries to roll the stand sideways. A 1 m wide footprint keeps it planted at full power.',
+      steps: [
+        'Load T-nuts for the corner brackets and the side braces.',
+        'Bolt one outrigger to each side of the front and rear pillar feet with 90° corner brackets.',
+        'Check that all four sit flat on the floor and square to the base rail.',
+      ],
+    },
+    {
+      s: 'frame', name: 'Pillars', code: '40 × 40 profile',
+      qty: 4, mat: 'alu', nodes: [1047, 1063, 1064, 1065],
+      summary: 'Four upright columns, two at the front and two at the rear, that form a rigid box tower.',
+      size: '40 × 40 × 700 mm',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'Four pillars share the 50 kgf load and resist twisting from motor torque far better than a single mast.',
+      steps: [
+        'Stand each pillar on its T-nut position on the base rail.',
+        'Fix each foot with 90° corner brackets and M8 button-head screws.',
+        'Check each pillar is vertical in both directions before tightening fully.',
+      ],
+    },
+    {
+      s: 'frame', name: 'Diagonal braces', code: '40 × 40 profile at 45°',
+      qty: 6, mat: 'alu', nodes: [1053, 1068, 1070, 1072, 1052, 1066],
+      summary: 'Six angled struts: four from the outriggers to the pillars and two from the rear of the base rail.',
+      size: '40 × 40 mm profile, about 400 mm long',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'They form triangles with the base and pillars, so the tower cannot lean sideways or fore-aft when the motor pushes or pulls.',
+      steps: [
+        'Fit a 45° bracket at each end of every brace.',
+        'Bolt the four side braces between the outriggers and the pillars.',
+        'Bolt the two rear braces between the rear of the base rail and the rear pillars.',
+        'Tighten evenly, then recheck that the pillars are vertical.',
+      ],
+    },
+    {
+      s: 'frame', name: 'Top beam', code: '40 × 120 aluminium extrusion',
+      qty: 1, mat: 'alu', nodes: [80],
+      summary: 'A wide beam across the top of the four pillars that carries the sensing head and the DAQ unit.',
+      size: '40 × 120 mm section, 600 mm long',
+      material: 'Anodised aluminium extrusion',
+      level: 'Critical',
+      why: 'It is the platform for the load cells. Any flex here reads as false thrust, so it must be level and fully bolted.',
+      steps: [
+        'Load T-nuts for the sensing head, the DAQ unit and the pillar brackets.',
+        'Lower the beam onto the four pillar tops with the long overhang at the front.',
+        'Fix it to each pillar with 90° corner brackets and check it is level.',
+      ],
+    },
+    {
+      s: 'frame', name: 'Slot cover strips', code: 'Orange T-slot covers · REUDE standard',
+      qty: '1 set', mat: 'slotcover', nodes: COVER_NODES,
+      summary: 'Orange cover strips pressed into every open T-slot of the aluminium frame. They are a standard feature of every DynoX stand.',
+      size: '9 mm wide, cut to length for each exposed slot',
+      material: 'Flexible PVC, REUDE orange',
+      level: 'Standard',
+      why: 'They keep dust, swarf and small parts out of the slots, cover the sharp slot edges, hold cables neatly, and give the stand its signature orange accent.',
+      steps: [
+        'Fit the strips after the frame is fully tightened and the cables are routed.',
+        'Press each strip into its slot by hand, starting at one end and working along.',
+        'Cut it flush at brackets and profile ends with a sharp knife.',
+        'Lift a strip out when you need to reach the slot, then press it back in.',
+      ],
+    },
+    {
+      s: 'head', name: 'Load-cell base gussets', code: '5 mm stainless steel',
+      qty: 4, mat: 'steel', nodes: own('gusset'),
+      summary: 'Stiff brackets that anchor the thrust load cell to the top beam.',
+      size: '80 × 60 × 45 mm',
+      material: '5 mm stainless steel',
+      level: 'Critical',
+      why: 'They are the fixed end of the thrust measurement. A rigid anchor means the load cell sees all of the thrust.',
+      steps: [
+        'Bolt the gussets to the top beam at the rear of the head position.',
+        'Check they are square to the beam before fitting the load cell.',
+      ],
+    },
+    {
+      s: 'head', name: 'Thrust load cell', code: '100 kg beam load cell (vertical)',
+      qty: 1, mat: 'cell', nodes: own('vcell'),
+      summary: 'An upright beam load cell that bends with the motor thrust. This is the main thrust measurement.',
+      size: '32 × 32 × 130 mm',
+      material: 'Precision strain-gauge load cell, 100 kg capacity',
+      level: 'Critical',
+      why: 'A 100 kg cell on a 50 kgf stand gives a 2× overload margin while keeping high resolution.',
+      steps: [
+        'Bolt the base of the cell to the gussets with its two cap screws.',
+        'Keep the arrow on the cell pointing in the direction the thrust will push.',
+        'Route its cable down the rear of the head with a gentle loop, never taut.',
+      ],
+    },
+    {
+      s: 'head', name: 'Torque load-cell holder', code: 'Coupling block',
+      qty: 1, mat: 'printed', nodes: own('holder'),
+      summary: 'A block that couples the thrust load cell to the torque load cell.',
+      size: '42 × 87 × 130 mm',
+      material: 'Machined block',
+      level: 'Important',
+      why: 'It keeps the two sensors at right angles so each one reads only its own force.',
+      steps: ['Bolt it to the free end of the thrust load cell, then slide the torque load cell into it.'],
+    },
+    {
+      s: 'head', name: 'Torque load cell', code: '100 kg beam load cell (horizontal)',
+      qty: 1, mat: 'cell', nodes: own('tcell'),
+      summary: 'A horizontal beam load cell that measures the motor’s twisting force.',
+      size: '32 × 32 × 130 mm',
+      material: 'Precision strain-gauge load cell, 100 kg capacity',
+      level: 'Critical',
+      why: 'Torque is needed for mechanical power and propeller efficiency figures.',
+      steps: [
+        'Slide the cell into the holder and tighten its screws.',
+        'Fit the clamp bracket on the front end.',
+        'Keep its cable slack and routed alongside the thrust cell cable.',
+      ],
+    },
+    {
+      s: 'head', name: 'Load-cell clamp bracket', code: '5 mm stainless steel',
+      qty: 1, mat: 'steel', nodes: own('support'),
+      summary: 'A stainless bracket that joins the torque load cell to the motor mount plate.',
+      size: '125 × 132 × 50 mm',
+      material: '5 mm stainless steel',
+      level: 'Critical',
+      why: 'It carries every newton of thrust and torque from the motor into the sensors, so it must not flex.',
+      steps: ['Bolt it onto the front of the torque load cell, square to the thrust axis.'],
+    },
+    {
+      s: 'head', name: 'Motor mount plate', code: 'X-pattern, adjustable arms',
+      qty: 1, mat: 'steel', nodes: own('plate'),
+      summary: 'An X-shaped stainless plate on four M6 spacers that fits a wide range of large motor bolt patterns.',
+      size: '125 × 125 mm, 5 mm thick, on 20 mm spacers',
+      material: '5 mm stainless steel, steel spacers and screws',
+      level: 'Critical',
+      why: 'The slotted arms let you centre almost any heavy-lift motor exactly on the thrust axis.',
+      steps: [
+        'Fix the plate to the clamp bracket through the four 20 mm M6 spacers and the centre screw.',
+        'Slide the arms to match your motor’s bolt circle and lock them.',
+        'Bolt the motor on and check that its shaft is centred on the plate.',
+      ],
+    },
+    {
+      s: 'head', name: 'Gooseneck sensor holder', code: 'Flexible sensor arm',
+      qty: 1, mat: 'black', nodes: own('goose'),
+      summary: 'A flexible gooseneck arm on the front of the top beam that holds the optical RPM sensor next to the propeller.',
+      size: 'About 138 × 179 × 144 mm',
+      material: 'Flexible steel gooseneck with clamp',
+      level: 'Important',
+      why: 'It lets you aim the RPM sensor at the blade path for any propeller size.',
+      steps: [
+        'Clamp the holder to the front of the top beam.',
+        'Bend the gooseneck so the sensor points at the blade path, close to it but clear of the tips.',
+      ],
+    },
+    {
+      s: 'elec', name: 'Vibration sensor board', code: 'Accelerometer',
+      qty: 1, mat: 'pcb', nodes: own('vib'),
+      summary: 'A small accelerometer board on 6 mm spacers behind the motor mount plate.',
+      size: 'About 32 × 22 mm on 6 mm spacers',
+      material: 'Circuit board, brass spacers',
+      level: 'Important',
+      why: 'Mounted right behind the motor, it picks up imbalance and resonance early.',
+      steps: [
+        'Fit the spacers to the mount, then fix the board with the button-head screws.',
+        'Plug its lead into the vibration channel on the DAQ unit.',
+      ],
+    },
+    {
+      s: 'elec', name: 'ROTRIX DAQ unit', code: 'STM32-based acquisition',
+      qty: 1, mat: 'black', nodes: own('daq'),
+      summary: 'The electronics unit that reads every sensor and streams live data to the ROTRIX software. Supplied as one enclosed unit.',
+      size: '86 × 140 × 47 mm',
+      material: 'Custom PCB with signal conditioning, in a 3D-printed enclosure',
+      level: 'Critical',
+      why: 'It samples thrust, torque, RPM, voltage, current, vibration and temperature in sync and sends them to your PC over USB.',
+      steps: [
+        'Bolt the DAQ unit to the rear of the top beam through two T-nuts.',
+        'Connect the load-cell, RPM, vibration and current sensor cables.',
+        'Connect it to the PC over USB and confirm every sensor in ROTRIX.',
+      ],
+    },
+    {
+      s: 'elec', name: 'Current sensor module', code: 'Inline current sensor',
+      qty: 1, mat: 'printed', nodes: own('cs_bot', 'cs_pcb', 'cs_top'),
+      summary: 'A current sensor in a two-part case, mounted on the rear pillar.',
+      size: '58 × 90 × 27 mm case',
+      material: '3D-printed case, current sensor board',
+      level: 'Critical',
+      why: 'Current is half of electrical power, so it is needed for every efficiency figure.',
+      steps: [
+        'Fix the case base to the rear pillar.',
+        'Place the current sensor board, close the cover and screw it shut.',
+        'Run the battery-to-ESC lead through the sensor.',
+      ],
+    },
+    {
+      s: 'hw', kind: 'hw', name: '90° corner brackets', code: '40 × 40 bracket',
+      qty: 21, mat: 'bracket', nodes: G.hw.cb90,
+      summary: 'Right-angle brackets at the pillar feet, the outriggers and the top beam.',
+      size: '40 × 40 × 35 mm',
+      material: 'Die-cast aluminium',
+      level: 'Important',
+      why: 'They set the squareness of every right-angle joint in the frame.',
+      steps: ['Load the T-nuts first, seat the bracket flush on both profiles, then tighten.'],
+    },
+    {
+      s: 'hw', kind: 'hw', name: '45° brace brackets', code: 'Diagonal end brackets',
+      qty: 12, mat: 'bracket', nodes: G.hw.ab45,
+      summary: 'Angled brackets that fix both ends of each diagonal brace.',
+      size: '35 × 58 × 80 mm',
+      material: 'Die-cast aluminium',
+      level: 'Important',
+      why: 'They hold each brace at exactly 45°, which is what makes the bracing effective.',
+      steps: ['Fit to the brace ends first, then bolt into the outrigger, base rail and pillar slots.'],
+    },
+    {
+      s: 'hw', kind: 'hw', name: 'T-slot nuts', code: 'Series 8 tee nuts',
+      qty: 64, mat: 'printed', nodes: G.hw.tnut,
+      summary: 'Nuts that sit inside the profile slots and receive every bracket screw.',
+      size: 'Series 8, for 40 mm profiles',
+      material: 'Printed polymer',
+      level: 'Critical',
+      why: 'They must be in the slot before brackets or end parts close it. A forgotten nut means taking the joint apart again.',
+      steps: ['Count them against the parts list, and insert them at each step before the slot is closed.'],
+    },
+    {
+      s: 'hw', kind: 'hw', name: 'M8 button-head screws', code: 'Bracket screws',
+      qty: 64, mat: 'fastener', nodes: G.hw.bolt,
+      summary: 'Socket screws that clamp the brackets to the profiles through the T-slot nuts.',
+      size: 'M8',
+      material: 'Stainless steel',
+      level: 'Important',
+      why: 'Even, correct tightness keeps the frame square. Over-tightening can crack printed nuts or deform brackets.',
+      steps: ['Thread in by hand first, then tighten evenly around each joint.'],
+    },
+  ],
+};

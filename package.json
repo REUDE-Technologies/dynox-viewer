@@ -1,0 +1,9 @@
+{
+  "name": "dynox-viewer",
+  "private": true,
+  "type": "module",
+  "description": "DynoX thrust stand 3D viewer by REUDE Technologies (static site + quote email function).",
+  "dependencies": {
+    "nodemailer": "^6.10.1"
+  }
+}
