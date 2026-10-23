@@ -28,13 +28,24 @@ assets/                             REUDE logo files and the printable SRS form 
 vendor/                             three.js and the QR code library
 ```
 
-## Deploy on Vercel
+## Deploy: GitHub → Vercel, assets on Cloudflare R2
 
-```
-npm i -g vercel
-cd dynox-viewer
-vercel --prod        # framework preset "Other", no build command, output directory ./
-```
+**1. Vercel (connected to GitHub, deploys on every push)**
+1. In Vercel, choose Add New → Project and import `REUDE-Technologies/dynox-viewer`.
+2. Framework preset: **Other**. Build command: empty. Output directory: `./`. Deploy.
+3. Every push to `main` now redeploys automatically; other branches get preview links.
+
+**2. Cloudflare R2 (3D models and manuals)**
+1. Cloudflare dashboard → R2 → Create bucket, e.g. `reude-assets`.
+2. Bucket → Settings → Public access: connect a custom domain such as `assets.reude.tech`
+   (or enable the r2.dev URL for testing).
+3. Bucket → Settings → CORS policy: paste `tools/r2-cors.json` (add your own domain if different).
+4. Upload the files once: `npx wrangler login`, then `tools/upload-r2.sh reude-assets dynox`.
+5. In `site.config.js` set `ASSET_BASE` to e.g. `https://assets.reude.tech/dynox/`, commit and push.
+
+The viewer loads models and manuals from R2 and falls back to the copies in this repo if R2 is
+unreachable. To update a model or manual later, re-run the upload script; no redeploy is needed
+unless the file name changes.
 
 ### Make Get a quote send email
 

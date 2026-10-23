@@ -4,6 +4,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { initQuote, saveBlob } from './quote.js';
+import { ASSET_BASE } from './site.config.js';
 
 const MODELS = {
   'compact-5': { label: 'RTS Compact 5', rating: '5 kgf', load: () => import('./models/compact-5.js') },
@@ -176,7 +177,11 @@ async function loadModel(id) {
     let buf;
     if (window.RTS_EMBED?.[config.id]) buf = decodeB64(window.RTS_EMBED[config.id]);
     else {
-      try { buf = await fetchWithProgress(config.url); }
+      try {
+        // Cloudflare R2 first (when configured), then the copy on this site.
+        try { buf = await fetchWithProgress(ASSET_BASE ? ASSET_BASE + config.url : config.url); }
+        catch (e) { if (!ASSET_BASE) throw e; buf = await fetchWithProgress(config.url); }
+      }
       catch (err) {
         // Hosts that cannot serve .glb get a base64 copy as a JavaScript module next to it.
         try { buf = decodeB64((await import(/* @vite-ignore */ `./${config.url}.js`)).default); }
@@ -213,7 +218,7 @@ function updateManualLink() {
   if (embedded) {
     if (!embedded.url) embedded.url = URL.createObjectURL(new Blob([decodeB64(embedded.b64)], { type: 'application/pdf' }));
     a.href = embedded.url;
-  } else a.href = MANUALS[cfg.id];
+  } else a.href = (ASSET_BASE || '') + MANUALS[cfg.id];
   a.setAttribute('download', `DynoX-${cfg.title.replace(/\s+/g, '-')}-User-Manual.pdf`);
 }
 
