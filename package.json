@@ -1,9 +1,22 @@
 {
-  "name": "dynox-viewer",
-  "private": true,
+  "name": "dynox-3d-viewer",
+  "version": "1.0.0",
+  "description": "REUDE DynoX Interactive 3D Thrust Stand Viewer supporting RTS Compact 5, RTS Pro 20, and RTS Ultra 50.",
+  "main": "app.js",
   "type": "module",
-  "description": "DynoX thrust stand 3D viewer by REUDE Technologies (static site + quote email function).",
-  "dependencies": {
-    "nodemailer": "^6.10.1"
-  }
+  "scripts": {
+    "start": "python -m http.server 8765",
+    "serve": "npx serve .",
+    "export-csv": "node tools/generate-components-csv.mjs"
+  },
+  "keywords": [
+    "dynox",
+    "thrust-stand",
+    "threejs",
+    "webgl",
+    "3d-viewer",
+    "reude"
+  ],
+  "author": "REUDE Technologies",
+  "license": "Proprietary"
 }
