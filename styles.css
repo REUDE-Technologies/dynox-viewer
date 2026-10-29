@@ -120,12 +120,14 @@ button[aria-pressed="true"] { background: var(--blue); color: #fff; }
 }
 #partsBody h3 small { font-weight: 500; font-size: 12px; color: var(--steel); }
 .part {
-  display: grid; grid-template-columns: 26px 1fr auto; align-items: center; gap: 8px;
+  display: grid; grid-template-columns: 10px 1fr; align-items: center; gap: 10px;
   width: 100%; text-align: left; padding: 6px 8px; font-size: 14px; line-height: 1.25;
 }
 .part .q { color: var(--steel); font-size: 13px; font-variant-numeric: tabular-nums; }
 .part.hw { font-size: 13px; padding-top: 5px; padding-bottom: 5px; }
-.part.hw .balloon { border-style: dashed; }
+.part .dotm { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--steel); }
+.part.hw .dotm { border-style: dashed; }
+.part.on .dotm { border-color: var(--orange); background: var(--orange); }
 .part.on { background: rgba(232, 99, 10, 0.12); }
 .part.on .balloon { border-color: var(--orange); border-style: solid; background: var(--orange); color: #fff; }
 
@@ -139,6 +141,7 @@ button[aria-pressed="true"] { background: var(--blue); color: #fff; }
 #detail { top: 76px; right: 16px; width: 360px; max-height: calc(100% - 180px); display: flex; flex-direction: column; padding: 14px 16px 14px; }
 #detail[hidden] { display: none; }
 .detail-head { display: flex; gap: 10px; align-items: flex-start; }
+#dNum { display: none; }
 .detail-head .balloon { width: 30px; height: 30px; font-size: 16px; border-color: var(--orange); background: var(--orange); color: #fff; }
 .detail-head > div { flex: 1; min-width: 0; }
 #detail h2 { margin: 2px 0 0; font: 600 22px/1.1 var(--cond); }
@@ -202,8 +205,15 @@ button[aria-pressed="true"] { background: var(--blue); color: #fff; }
 }
 .callout.on { border-color: var(--orange); }
 .callout.on .balloon { background: var(--orange); border-color: var(--orange); color: #fff; }
-.callout.compact { padding-right: 3px; }
-.callout.compact .nm { display: none; }
+.callout { padding: 5px 10px; }
+.callout .balloon { display: none; }
+.callout.on .nm { color: #b54a05; font-weight: 600; }
+.callout.compact { padding: 3px 7px; font-size: 11px; }
+/* Manual figures (capture mode) keep numbered balloons that match the manual parts tables. */
+body.capture .callout { padding: 3px 9px 3px 3px; }
+body.capture .callout .balloon { display: inline-grid; }
+body.capture .callout.compact { padding-right: 3px; }
+body.capture .callout.compact .nm { display: none; }
 .has-sel .callout:not(.on) { opacity: 0.45; }
 #leaders line { stroke: var(--leader); stroke-width: 1; }
 #leaders line.on { stroke: var(--orange); stroke-width: 1.5; }
@@ -318,3 +328,15 @@ body.modal-open { overflow: hidden; }
 }
 
 body.capture .topbar, body.capture .plate, body.capture #parts, body.capture #toolbar, body.capture #hint, body.capture #detail, body.capture #toast { display: none !important; }
+
+/* Wiring legend */
+#wireLegend { position: absolute; right: 16px; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); width: 220px; padding: 12px 14px; z-index: 6; }
+#wireLegend[hidden] { display: none; }
+#wireLegend h4 { margin: 0 0 8px; font: 600 15px/1 var(--cond); letter-spacing: 0.02em; }
+#wireLegend ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+#wireLegend li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+#wireLegend li i { width: 22px; height: 6px; border-radius: 3px; flex: none; }
+#wireLegend p { margin: 9px 0 0; font-size: 12px; color: var(--steel); line-height: 1.35; }
+.has-sel #wireLegend { display: none; }
+@media (max-width: 700px) { #wireLegend { left: 8px; right: auto; width: auto; max-width: 60vw; bottom: calc(var(--tb, 120px) + 8px); } }
+body.capture #wireLegend { display: none !important; }

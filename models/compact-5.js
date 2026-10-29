@@ -2,6 +2,8 @@
 // Node indices refer to p<i> in model/rts-compact-5.glb (converted from the SolidWorks STEP assembly).
 // Coordinates: millimetres, Y up, thrust axis +X (propeller faces +X).
 
+import DAQ from './compact-5.daq.js';
+
 const R = (a, b) => Array.from({ length: b - a + 1 }, (_, k) => a + k);
 
 const HEAD = 45; // head lifts off the cross arm in the exploded view
@@ -23,6 +25,8 @@ const pieces = [
   { id: 'clamp_A', nodes: [105], ex: [0, -80, 0] },
   { id: 'clamp_B', nodes: [106], ex: [0, -80, 0] },
   { id: 'current', nodes: [34, 35, 36, 37, 38, 91, 92], ex: [-90, 0, 0] },
+  // ROTRIX DAQ unit (same unit as the RTS Pro 20) on the side face of the mast.
+  { id: 'daq', nodes: DAQ.nodes, ex: [-190, -80, 60] },
   { id: 'rpm', nodes: [17, 19, 20, 27, 28, 29, 30, 18, 31, 32, 33] },
   { id: 'lcb', nodes: [2, 3, 4, 5, 6, 25, 26], ex: [0, HEAD, 0] },
   { id: 'tcell', nodes: [7], ex: [25, HEAD, 0] },
@@ -52,10 +56,23 @@ export default {
     side: [0.0001, 0.05, 1],
     front: [1, 0.05, 0.0001],
     top: [0.001, 1, 0.0005],
+    wiring: [0.55, 0.35, 1.2],
     table: [0.85, 1.25, 1.05],
   },
   explodeView: 'side',
-  matOverrides: { 19: 'pcb', 27: 'fastener', 28: 'fastener', 29: 'fastener', 30: 'fastener', 34: 'pcb', 87: 'brass', 88: 'brass', 89: 'brass', 90: 'brass' },
+  // Cable runs for the wiring view (model coordinates, mm). Every run ends at the ROTRIX DAQ unit.
+  wireRadius: 1.8,
+  wires: [
+    { key: 'thrust', label: 'Thrust load cell', color: '#e8630a', pts: [[76, 118, -17], [70, 150, -48], [20, 140, -48], [-15, 110, -42], [-15, 0, -42], [-15, -20, -42], [-16, -30, 8], [-38, -58, 24]] },
+    { key: 'torque', label: 'Torque load cells', color: '#1f5c99', pts: [[76, 191, 23], [62, 170, 40], [20, 150, 45], [-15, 120, 20], [-15, 0, 10], [-24, -58, 24]] },
+    { key: 'torque2', label: 'Torque load cells', color: '#1f5c99', pts: [[76, 191, -57], [62, 170, -74], [-15, 130, -50], [-15, 0, -46], [-15, -22, -46], [-14, -34, 10], [-12, -58, 24]] },
+    { key: 'rpm', label: 'RPM sensor', color: '#2a9d8f', pts: [[186, 146, -17], [120, 150, -5], [86, 150, -2], [40, 152, 14], [-15, 130, 14], [-15, 0, 14], [0, -58, 24]] },
+    { key: 'vib', label: 'Vibration sensor', color: '#8e5bd6', pts: [[58, 205, -16], [30, 200, -5], [-15, 180, -5], [-15, 0, -5], [-15, -22, 6], [12, -58, 24]] },
+    { key: 'current', label: 'Current sensor', color: '#d62828', pts: [[-40, -33, -13], [-42, -22, -6], [-46, -32, 14], [-46, -58, 24]] },
+    { key: 'power', label: 'Battery power (through the current sensor)', color: '#5b1b1b', r: 1.5, pts: [[-170, -331, -130], [-60, -210, -14], [-50, -127, -14], [-50, -33, -14], [-55, 0, -30], [-30, 60, -60], [60, 122, -82], [150, 150, -62], [190, 190, -25]] },
+    { key: 'usb', label: 'USB to PC', color: '#4a5560', pts: [[10, -202, 24], [10, -240, 70], [0, -291, 150], [-120, -331, 210]] },
+  ],
+  matOverrides: { ...DAQ.mats, 19: 'pcb', 27: 'fastener', 28: 'fastener', 29: 'fastener', 30: 'fastener', 34: 'pcb', 87: 'brass', 88: 'brass', 89: 'brass', 90: 'brass' },
   sections: [
     { id: 'frame', name: 'Frame and base' },
     { id: 'head', name: 'Force-sensing head' },
@@ -310,6 +327,20 @@ export default {
       level: 'Important',
       why: 'Picks up imbalance and resonance, which helps catch a damaged propeller or a loose motor.',
       steps: ['Screw the spacers to the holder, then fit the board on top.'],
+    },
+    {
+      s: 'sense', name: 'ROTRIX DAQ unit', code: 'STM32-based acquisition',
+      qty: 1, mat: 'case', nodes: DAQ.nodes,
+      summary: 'The electronics box that reads every sensor and streams live data to the ROTRIX software. It is the same unit as on the RTS Pro 20.',
+      size: '125 × 140 × 41 mm',
+      material: 'Custom PCB in a printed enclosure',
+      level: 'Critical',
+      why: 'It samples thrust, torque, speed, voltage, current and vibration together and sends them to your PC over USB.',
+      steps: [
+        'Screw it to the side face of the mast through two T-nuts, below the cross arm.',
+        'Plug in the load-cell, RPM, vibration and current sensor leads.',
+        'Connect it to the PC over USB and confirm every sensor in ROTRIX.',
+      ],
     },
     {
       s: 'sense', name: 'Current sensor module', code: 'Inline current sensor',

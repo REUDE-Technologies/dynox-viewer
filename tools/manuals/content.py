@@ -1,7 +1,7 @@
 """Model-specific content for the DynoX user manuals."""
 
-DATE = '2026-10-23'
-REV = '1.0'
+DATE = '2026-10-29'
+REV = '1.1'
 
 ROUTE_COLORS = {
     'thrust': ('#1F5C99', 'Load-cell cables (thrust and torque)'),
@@ -83,7 +83,7 @@ MODELS = {
             ['Force sensing', 'One thrust beam load cell and two torque beam load cells'],
             ['Speed sensing', 'Non-contact optical RPM sensor on an adjustable arm'],
             ['Electrical sensing', 'Inline current sensor module; voltage measured by the DAQ unit'],
-            ['Data acquisition', 'ROTRIX DAQ unit with USB link to the PC'],
+            ['Data acquisition', 'ROTRIX DAQ unit on the side of the mast (same unit as the RTS Pro 20); USB link to the PC'],
             ['Software', 'ROTRIX test control and logging; ROTRIDASH analytics (optional)'],
             ['Frame', '40-series aluminium extrusions with orange slot covers (REUDE standard)'],
             ['Footprint', 'About 600 × 205 mm (base rail with bench clamps)'],
@@ -106,7 +106,7 @@ MODELS = {
                 'Screw a carry handle onto the outer end of each cross member.'],
              None),
             ('s3', 'Mast and lower corner brackets', [
-                'Load T-nuts into the mast for the current sensor module and the RPM wiring clips.',
+                'Load T-nuts into the mast for the current sensor module, the DAQ unit and the cable ties.',
                 'Stand the 400 mm mast between the cross members.',
                 'Fit a corner bracket on each side of the mast foot and bolt it to the mast and the cross member.',
                 'Check the mast is vertical on two faces with the spirit level, then tighten all base bolts.'],
@@ -133,11 +133,12 @@ MODELS = {
                 'Fit the propeller adapter and blades, with a nylon washer on each side of each blade.',
                 'Tighten the shoulder screws evenly and check that the blades fold out freely.'],
              'Fit the propeller last, after all wiring is complete, and only when the battery is disconnected.'),
-            ('s8', 'Sensors: RPM arm, vibration board and current sensor', [
+            ('s8', 'Sensors and DAQ unit', [
                 'Bolt the RPM sensor arm to the cross arm and aim the sensor at the rotating part of the motor or the blade path.',
                 'Fix the vibration board on its four spacers on the back of the torque cell holder.',
-                'Bolt the current sensor module to the side of the mast.'],
-             None),
+                'Bolt the current sensor module to the rear face of the mast.',
+                'Screw the ROTRIX DAQ unit to the side face of the mast, below the cross arm, with its connectors facing up.'],
+             'The DAQ unit is supplied assembled and sealed. Do not open the enclosure.'),
             ('s9', 'Orange slot cover strips (REUDE standard)', [
                 'Check that every bolt in the frame is at its final torque and that all cables are routed.',
                 'Press an orange cover strip into each open T-slot, starting at one end and working along by hand.',
@@ -147,25 +148,25 @@ MODELS = {
         ],
         'head_caption': 'Exploded side view of the force-sensing head, motor and propeller.',
         'daq': {
-            'intro': ('The Compact 5 uses the ROTRIX DAQ unit as a separate box that sits on the bench behind the stand. '
-                      'All sensor cables run down the back of the mast to the base and across to the DAQ unit.'),
+            'intro': ('The Compact 5 carries the ROTRIX DAQ unit, the same unit as on the RTS Pro 20, on the side face of the mast below the cross arm. '
+                      'Every sensor cable runs down the rear face of the mast and round the corner into the top of the DAQ unit, so the cables stay short.'),
             'steps': [
-                'Place the DAQ unit on the bench behind the stand, at least 300 mm from the propeller plane.',
+                'Slide two T-nuts into the side slot of the mast and screw the DAQ unit on, about 60 mm below the cross arm, connectors facing up.',
                 'Fit the current sensor board in its case on the mast, close the cover and screw it shut.',
                 'Run the battery-to-ESC lead through the current sensor, with the arrow pointing from the battery to the ESC.',
                 'Connect the thrust and torque load cells, RPM sensor, vibration board and current sensor to the matching inputs on the DAQ unit.',
                 'Connect the DAQ unit to the PC with the USB cable.',
             ],
-            'figure_caption': 'Current sensor module and sensor boards on the mast and head.',
+            'figure_caption': 'ROTRIX DAQ unit on the side of the mast, with the current sensor module on the rear face.',
         },
         'wiring': [
             ['Cable', 'From', 'Route', 'To'],
-            ['Thrust and torque load cells', 'Sensing head', 'Loose service loop at the head, then down the rear face of the mast, tied every 150 mm', 'DAQ load-cell inputs'],
+            ['Thrust and torque load cells', 'Sensing head', 'Loose service loop at the head, down the rear face of the mast, round the corner into the top of the DAQ unit', 'DAQ load-cell inputs'],
             ['RPM sensor', 'RPM arm', 'Along the cross arm, down the rear face of the mast', 'DAQ RPM input'],
             ['Vibration sensor', 'Back of the torque cell holder', 'Service loop, then down the mast with the load-cell cables', 'DAQ vibration input'],
-            ['Current sensor signal', 'Current sensor module', 'Down the mast to the base', 'DAQ current input'],
-            ['Power leads', 'Battery', 'Through the current sensor, up the front face of the mast, kept apart from the signal cables', 'ESC, then motor'],
-            ['USB', 'DAQ unit', 'Along the bench, away from the power leads', 'PC'],
+            ['Current sensor signal', 'Current sensor module', 'Short lead round the mast corner to the DAQ unit', 'DAQ current input'],
+            ['Power leads', 'Battery', 'Through the current sensor, up the rear of the mast and over the cross arm, kept apart from the signal cables', 'ESC, then motor'],
+            ['USB', 'DAQ unit', 'From the bottom of the DAQ unit, along the base rail and off the bench', 'PC'],
         ],
         'calib_load': '0.5, 1 and 2 kg',
         'max_display': '5 kgf',
@@ -173,80 +174,87 @@ MODELS = {
     'pro-20': {
         'docid': 'DNX-RTS20-UM-2026-01',
         'rating': '20 kgf',
-        'people': 'At least three people are required: two to hold the pillars and one to fit brackets and bolts.',
+        'people': 'At least two people are required, and three when standing the pillars.',
         'intro': ('The RTS Pro 20 is a floor-standing thrust stand for heavy-lift drone propulsion up to 20 kgf of thrust. '
-                  'A braced twin-pillar tower holds the motor about 1.1 m above the floor, clear of ground effect. '
-                  'Factory-calibrated load cells measure thrust and torque together, while the ROTRIX DAQ unit records RPM, voltage, '
-                  'current, vibration and temperature in sync and streams them to the ROTRIX software.'),
+                  'Twin 1,000 mm pillars on a 1,000 mm base, braced at the front, rear and both sides, hold the motor about '
+                  '1.08 m above the floor, clear of ground effect. A three-cell sensing head (one upright thrust cell and two '
+                  'torque cells) measures thrust and torque together, while the ROTRIX DAQ unit records RPM, voltage, current, '
+                  'vibration and temperature in sync and streams them to the ROTRIX software.'),
         'specs': [
             ['Item', 'Specification'],
             ['Rated thrust', '0 to 20 kgf'],
             ['Measured parameters', 'Thrust, torque, RPM, voltage, current, vibration and temperature'],
-            ['Force sensing', 'Load-cell sensor block, ±0.5% of full scale'],
-            ['Speed sensing', 'Optical IR sensor, 0 to 25,000 RPM, ±1%'],
-            ['Electrical sensing', 'Voltage 3S to 12S; current 5 to 100 A'],
-            ['Vibration and temperature', 'Vibration ±16 g; temperature -55 to 125 °C'],
-            ['Data acquisition', 'ROTRIX DAQ unit, STM32 controller, signal conditioning, filtering and protection; USB link'],
+            ['Force sensing', 'Three beam load cells: one upright thrust cell and two horizontal torque cells; ±0.5% of full scale'],
+            ['Motor interface', 'Stainless-steel motor plate, 200 × 207 mm, across the two torque cells'],
+            ['Speed sensing', 'Optical sensor (QRD1114) on a printed arm, 0 to 25,000 RPM, ±1%'],
+            ['Electrical sensing', 'Inline current sensor module on the right pillar (5 to 100 A); voltage 3S to 12S measured by the DAQ'],
+            ['Vibration and temperature', 'Accelerometer board behind the motor plate, ±16 g; temperature -55 to 125 °C'],
+            ['Data acquisition', 'ROTRIX DAQ unit on the middle pillar bridge; STM32 controller, signal conditioning and protection; USB link'],
             ['Software', 'ROTRIX test control and logging; ROTRIDASH analytics (optional)'],
             ['Frame', '40-series aluminium extrusions with orange slot covers (REUDE standard)'],
-            ['Footprint', 'About 845 × 1,100 mm including stabiliser arms'],
+            ['Footprint', 'About 845 × 1,000 mm including the side outriggers'],
             ['Thrust axis height', 'About 1,080 mm above the floor'],
-            ['Reference propeller', 'About 1,030 mm (40 inch) two-blade'],
+            ['Reference propeller', '40 inch (about 1,030 mm) two-blade carbon fibre'],
         ],
         'tools': ['Hex keys 4, 5 and 6 mm', 'Spanner or socket set', 'Torque wrench', 'Spirit level, try square and tape measure',
-                  'Cable ties and a side cutter', 'Multimeter and clamp meter', 'Hand tachometer (for the RPM check)',
+                  'Cable ties, a side cutter and a sharp knife (for the slot covers)', 'Multimeter and clamp meter',
+                  'Hand tachometer (for the RPM check)',
                   'Calibration weights (for example 2, 5 and 10 kg) with cord and a low-friction pulley',
-                  'Masonry drill and M12 anchors for concrete floors'],
+                  'Masonry drill and M10 anchors for concrete floors'],
         'steps': [
-            ('s1', 'Base cross-joints (SUB-ASSY-001)', [
-                'Take one short profile, two 90° corner brackets, two T-nuts and two M8 bolts.',
-                'Slide a T-nut into the top slot on each side of the profile, roughly where the brackets will sit.',
-                'Hold a bracket flush against each side, line its hole up with the nut and fit the M8 bolt.',
-                'Tighten until snug, check the brackets sit flush, then build a second identical joint.'],
-             'Do not over-tighten. Excess torque can strip the T-nut or distort the bracket.'),
-            ('s2', 'Base frame (SUB-ASSY-002)', [
-                'Insert T-nuts into both base rails for every bracket that will land on them: the cross-joints, the pillar feet, the braces, the stabiliser arms and the clamps.',
-                'Place a cross-joint between the rails at each end, symmetric and flush with the central slot.',
-                'Bolt the cross-joint brackets into the rail nuts.',
+            ('s1', 'Base rails and cross members', [
+                'Lay the two 1,000 mm base rails (40 × 80 mm) parallel on a level floor, 85 mm apart.',
+                'Load T-nuts into the rail top slots for the pillar feet, the six brace feet, the outriggers and the cross members.',
+                'Fit a 90° bracket to each end of the two 85 mm cross members.',
+                'Place one cross member between the rails at the front and one at the rear, flush with the rail ends, and bolt them.',
                 'Measure both diagonals of the frame. They should match within 2 mm. Adjust, then tighten.'],
-             'Loading every T-nut now saves dismantling later. The T-nuts cannot be added once a slot is closed.'),
-            ('s3', 'Stabiliser arms and floor clamps', [
-                'Bolt a 300 mm stabiliser arm square to the outer face of each base rail, in line with the pillar positions.',
-                'Move the frame to its final position on a level floor.',
-                'Place the four rail-end clamps and the two arm-end clamps. Mark the anchor holes, but leave the clamps loose until Step 6.'],
-             None),
-            ('s4', 'Pillars (SUB-ASSY-003)', [
-                'Insert T-nuts into both pillars for the braces, the bridges, the handles and the DAQ unit.',
-                'With two people holding, stand both 1,000 mm pillars upright at the centre of the base.',
-                'Fit four 90° corner brackets around each pillar foot (eight in total) with M8 bolts.',
-                'Check that the pillars are vertical on two faces and parallel to each other, then tighten.'],
+             'Load every T-nut the rails need now. They cannot be added once brackets close the slots.'),
+            ('s2', 'Pillars', [
+                'Load T-nuts into both pillars for the bridges, the brace tops, the handles, the head enclosure and the current sensor.',
+                'With two people holding, stand each 1,000 mm pillar on its rail, 430 mm from the rear end, wide face towards the propeller.',
+                'Fix each pillar foot with four 90° corner brackets and M8 screws.',
+                'Check that both pillars are vertical on two faces and parallel to each other, then tighten.'],
              'A pillar can topple before its brackets are tight. Keep two people holding the pillars until all eight brackets are bolted.'),
-            ('s5', 'Diagonal braces (SUB-ASSY-004)', [
-                'Fit a 45° end bracket at each end of every brace.',
-                'Offer each front and rear brace in at 45° between the base rail and the pillar, and bolt both ends.',
-                'Fit the two side braces between the stabiliser arms and the pillars in the same way.',
-                'Tighten all brace bolts evenly, then recheck that the pillars are vertical.'],
+            ('s3', 'Side outriggers and floor clamps', [
+                'Butt a 300 mm outrigger against the outer face of each rail, in line with the pillars, and fix it with a 45° bracket.',
+                'Move the frame to its final position.',
+                'Place a U-clamp over each rail end and a clamp bar over each outrigger end. Mark the anchor holes, but leave the clamps loose until Step 5.'],
              None),
-            ('s6', 'Pillar bridges, handles and anchoring (SUB-ASSY-005)', [
-                'Place the lower and upper 85 mm bridges between the pillars at their marked heights, level and centred.',
-                'Fix each bridge with 90° corner brackets and M8 bolts.',
-                'Screw a carry handle to the outer slot of each pillar.',
-                'Tighten the whole frame to the recommended torque, then drill, anchor and tighten all six floor clamps.'],
-             'Anchor the clamps only after the frame is fully squared and tightened.'),
-            ('s7', 'Sensing head (SUB-ASSY-006)', [
-                'Bolt the head mounting bracket onto the upper bridge and check that it is square to the pillars.',
-                'Bolt the load-cell sensor block onto the bracket with the motor face pointing forward. Do not dismantle the block.',
-                'Fit the motor mounting plate, with its sensor board, to the front of the sensor block.'],
-             'The load-cell block is calibrated at the factory as one unit. Taking it apart voids the calibration.'),
-            ('s8', 'Motor, propeller and RPM sensor', [
-                'Bolt the motor to the mounting plate with M6 bolts and thread-locker, and check that the shaft is centred.',
-                'Fix the RPM sensor arm on the propeller side and aim the sensor at the blade path.',
-                'Fit the propeller hub and blades last, after wiring is complete and with the battery disconnected.'],
+            ('s4', 'Diagonal braces', [
+                'Fit a 45° bracket at each end of all six braces.',
+                'Bolt the two front braces and the two rear braces between the rails and the pillars.',
+                'Bolt the two side braces between the outriggers and the pillars.',
+                'Tighten all brace screws evenly, then recheck that the pillars are vertical.'],
              None),
-            ('s9', 'DAQ unit and sensing-head cover', [
-                'Mount the DAQ unit on the rear face of the pillars at mid height.',
-                'Complete the wiring in Section 7, then fit the sensing-head cover without trapping any cable.'],
+            ('s5', 'Pillar bridges, handles and anchoring', [
+                'Fit the top bridge flush with the pillar tops and the middle bridge about 600 mm above the floor, each with 90° brackets.',
+                'Screw a carry handle to the outer slot of each pillar, about 700 mm above the floor.',
+                'Tighten the whole frame to the recommended torque.',
+                'Drill, anchor and tighten all six floor clamps.'],
+             'Anchor the clamps only after the frame is fully squared and tightened. The stand must be anchored before any powered test.'),
+            ('s6', 'Head mounting bracket and thrust load cell', [
+                'Bolt the 5 mm head mounting bracket to the top bridge through two T-nuts and check it is square to the pillars.',
+                'Bolt the thrust load cell upright to the front face of the bracket, cable end down.',
+                'Fit the sheet-metal clamp over the top end of the load cell.'],
+             'Handle the load cells gently. Never use the head as a handle and never load it by hand beyond the rated thrust.'),
+            ('s7', 'Load-cell support bracket and torque load cells', [
+                'Bolt the folded load-cell support bracket to the clamp on top of the thrust cell.',
+                'Bolt one torque load cell to each side of the support bracket, pointing forward.',
+                'Check that both cells are level and parallel to the thrust axis.'],
              None),
+            ('s8', 'Motor plate, vibration board, motor, RPM sensor and propeller', [
+                'Bolt the stainless motor plate across the front ends of the two torque cells.',
+                'Screw the vibration board holder to the back of the motor plate.',
+                'Bolt the motor to the plate with thread-locker and check that the shaft is centred.',
+                'Fix the RPM sensor arm on the left load-cell cover and aim the sensor at the blade path.',
+                'Fit the propeller last, after wiring is complete and with the battery disconnected.'],
+             None),
+            ('s9', 'DAQ unit, current sensor, covers and head enclosure', [
+                'Screw the ROTRIX DAQ unit to the rear of the middle pillar bridge, connectors facing up.',
+                'Screw the current sensor case to the outer slot of the right pillar, below the handle.',
+                'Complete the wiring in Section 8.',
+                'Clip the two load-cell covers over the torque cells, then fit the head enclosure and screw it to both pillars without trapping any cable.'],
+             'The DAQ unit is supplied assembled and sealed. Do not open the enclosure.'),
             ('s10', 'Orange slot cover strips (REUDE standard)', [
                 'Check that every bolt in the frame is at its final torque and that all cables are routed.',
                 'Press an orange cover strip into each open T-slot, starting at one end and working along by hand.',
@@ -256,24 +264,26 @@ MODELS = {
         ],
         'head_caption': 'Exploded side view of the sensing head, motor and propeller.',
         'daq': {
-            'intro': ('The ROTRIX DAQ unit mounts on the rear face of the pillars, close to the sensing head and away from the propeller. '
-                      'It reads every sensor in sync and sends the data to the PC over USB.'),
+            'intro': ('The ROTRIX DAQ unit mounts on the rear of the middle pillar bridge, between the pillars and well behind the propeller. '
+                      'The current sensor module sits on the outer face of the right pillar, below the handle, so the battery lead stays clear of the signal cables.'),
             'steps': [
-                'Slide two T-nuts into the rear slot of each pillar at mid height.',
-                'Bolt the DAQ unit to the pillars with its connector side facing up.',
-                'Connect the load-cell sensor block, RPM sensor and motor-side sensor board to the matching DAQ inputs.',
-                'Connect the voltage and current sensing to the battery-to-ESC power line as marked on the DAQ unit.',
+                'Slide two T-nuts into the rear slot of the middle bridge and screw the DAQ unit on, connectors facing up.',
+                'Fit the current sensor board in its case on the right pillar, close the cover and screw it shut.',
+                'Run the battery-to-ESC lead through the current sensor, with the arrow pointing from the battery to the ESC.',
+                'Connect the thrust cell, the two torque cells, the RPM sensor, the vibration board and the current sensor to the matching DAQ inputs.',
                 'Connect the DAQ unit to the PC with the USB cable and power it up.',
             ],
-            'figure_caption': 'ROTRIX DAQ unit on the rear of the pillars, beneath the sensing head.',
+            'figure_caption': 'ROTRIX DAQ unit on the middle pillar bridge, and the current sensor module on the right pillar.',
         },
         'wiring': [
             ['Cable', 'From', 'Route', 'To'],
-            ['Load-cell cables', 'Sensor block', 'Service loop at the head, then down the rear face of the left pillar, tied every 150 mm', 'DAQ load-cell inputs'],
-            ['RPM sensor', 'RPM arm', 'Back along the head, down the left pillar', 'DAQ RPM input'],
-            ['Vibration and temperature', 'Motor-side sensor board', 'Service loop under the head, down the left pillar', 'DAQ sensor inputs'],
-            ['Power leads', 'Battery', 'Up the right pillar, through the current sensing, to the ESC beside the head', 'ESC, then motor'],
-            ['USB', 'DAQ unit', 'Down the left pillar and along the floor to the operator station', 'PC'],
+            ['Thrust load cell', 'Upright cell under the head', 'Service loop at the cell, down between the pillars in front of the middle bridge, over the bridge', 'DAQ thrust input'],
+            ['Torque load cells', 'Both sides of the head', 'Service loop at each cell, down the front face of each pillar', 'DAQ torque inputs'],
+            ['RPM sensor', 'Arm on the left load-cell cover', 'Back along the arm, down the front face of the left pillar', 'DAQ RPM input'],
+            ['Vibration sensor', 'Board behind the motor plate', 'Service loop, down the front of the head enclosure and between the pillars', 'DAQ vibration input'],
+            ['Current sensor signal', 'Module on the right pillar', 'Short lead round the right pillar to the DAQ unit', 'DAQ current input'],
+            ['Power leads', 'Battery at the front right', 'Up the right pillar, through the current sensor, past the handle to the ESC beside the head', 'ESC, then motor'],
+            ['USB', 'DAQ unit', 'Down the centre and along the floor behind the stand to the operator station', 'PC'],
         ],
         'calib_load': '2, 5 and 10 kg',
         'max_display': '20 kgf',

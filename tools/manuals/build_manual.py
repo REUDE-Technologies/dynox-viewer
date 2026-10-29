@@ -13,9 +13,8 @@ from rts_pdf import P, bullets, numbered, table, callout, figure, S, mm as _mm
 from content import MODELS, COMMON_SAFETY, TORQUE_TABLE, TROUBLE, MAINT, ROUTE_COLORS, DATE, REV
 
 FIG = '/home/claude/manual/fig'
-OUT = '/home/claude/build/site/manuals'
+OUT = '/home/claude/dynox-viewer/manuals'
 CAT = json.load(open('/home/claude/manual/catalog.json'))
-PROJ = json.load(open('/home/claude/manual/routeproj.json'))
 TEXT_W = R.PAGE_W - 2 * R.MARGIN_X
 os.makedirs(OUT, exist_ok=True)
 os.makedirs(FIG + '/jpg', exist_ok=True)
@@ -37,19 +36,8 @@ def prep(name, margin=30):
 
 
 def draw_routes(model):
-    src = f'{FIG}/{model}_routes.png'
-    im = PImage.open(src).convert('RGB')
-    d = ImageDraw.Draw(im)
-    for r in PROJ[model]:
-        col = ROUTE_COLORS[r['key']][0]
-        pts = [tuple(p) for p in r['pts']]
-        d.line(pts, fill=(255, 255, 255), width=12, joint='curve')
-        d.line(pts, fill=col, width=7, joint='curve')
-        for (x, y) in (pts[0], pts[-1]):
-            d.ellipse((x - 9, y - 9, x + 9, y + 9), fill=col, outline=(255, 255, 255), width=3)
-    out = f'{FIG}/{model}_routes_drawn.png'
-    im.save(out)
-    return prep(f'{model}_routes_drawn')
+    # The cable runs are drawn in 3D by the viewer's wiring view (same data as the website).
+    return prep(f'{model}_routes')
 
 
 class Doc(BaseDocTemplate):
@@ -257,8 +245,11 @@ def build(m):
     routes_img = draw_routes(m)
     st.append(figure(routes_img, 150, 'Figure 8.1  Recommended cable routes. Signal cables and power leads run on separate sides of the frame.', max_h_mm=110))
     legend = [['', 'Cable']]
-    for r in PROJ[m]:
-        col, label = ROUTE_COLORS[r['key']]
+    seen = []
+    for r in CAT[m]['wires']:
+        if r['label'] in [x[1] for x in seen]: continue
+        seen.append((r['color'], r['label']))
+    for col, label in seen:
         legend.append([R.Swatch(col), label])
     lt = table(legend, [20 * mm, TEXT_W - 20 * mm], zebra=False, align_top=False)
     st.append(lt)

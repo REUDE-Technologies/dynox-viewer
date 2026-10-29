@@ -37,6 +37,7 @@ const MATERIALS = {
   cover:    { color: 0x1f5c99, metalness: 0.25, roughness: 0.48 },
   steel:    { color: 0xb4b9be, metalness: 0.85, roughness: 0.3 },
   slotcover: { color: 0xe8630a, metalness: 0.0, roughness: 0.55 },
+  white:    { color: 0xe9ecef, metalness: 0.0,  roughness: 0.6 },
 };
 
 const BACKGROUNDS = {
@@ -120,6 +121,7 @@ let meshes = [];         // every mesh in the model
 let floorY = 0;
 let layoutBox = new THREE.Box3();
 let e = 0, eT = 0, s = 0, sT = 0;
+let showWires = false, wireGroup = null; // wiring view: cable runs from each sensor to the DAQ unit
 let selected = null, hovered = null, isolate = false;
 let showLabels = false, showEdges = true;
 let camTween = null, pendingFit = null;
@@ -339,8 +341,57 @@ function build(gltf) {
 
   buildPartsList();
   buildCallouts();
+  buildWires();
   applyState();
   refreshLook();
+}
+
+// ---------- wiring view: cable runs drawn as tubes in model coordinates ----------
+function buildWires() {
+  wireGroup = null;
+  const runs = cfg.wires || [];
+  $('bWires').hidden = !runs.length;
+  if (!runs.length) { setWires(false); return; }
+  wireGroup = new THREE.Group();
+  wireGroup.name = 'wires';
+  const R = cfg.wireRadius || 3;
+  for (const w of runs) {
+    const pts = w.pts.map((p) => new THREE.Vector3(...p));
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal', 0.5);
+    const len = curve.getLength();
+    const geo = new THREE.TubeGeometry(curve, Math.max(24, Math.round(len / 6)), (w.r || 1) * R, 10, false);
+    const col = new THREE.Color(w.color);
+    const solid = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col, roughness: 0.45, metalness: 0.05, emissive: col, emissiveIntensity: 0.15 }));
+    // X-ray copy so runs hidden behind covers and profiles still read through them.
+    const ghost = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: 0.35, depthTest: false, depthWrite: false }));
+    ghost.renderOrder = 5;
+    solid.raycast = ghost.raycast = () => {};
+    const capGeo = new THREE.SphereGeometry((w.r || 1) * R * 1.9, 14, 10);
+    for (const end of [pts[0], pts[pts.length - 1]]) {
+      const cap = new THREE.Mesh(capGeo, solid.material);
+      cap.position.copy(end); cap.raycast = () => {};
+      wireGroup.add(cap);
+    }
+    wireGroup.add(solid, ghost);
+  }
+  root.add(wireGroup);
+  const legend = $('wireLegend');
+  const seen = new Map();
+  for (const w of runs) if (!seen.has(w.label)) seen.set(w.label, w.color);
+  legend.innerHTML = `<h4>Wiring</h4><ul>${[...seen].map(([l, c]) => `<li><i style="background:${c}"></i>${esc(l)}</li>`).join('')}</ul><p>Every sensor cable runs to the ROTRIX DAQ unit.</p>`;
+  setWires(showWires);
+}
+function setWires(on) {
+  showWires = !!on && !!wireGroup;
+  $('bWires').setAttribute('aria-pressed', String(showWires));
+  $('wireLegend').hidden = !showWires;
+  if (showWires && (eT !== 0 || sT !== 0)) goAssembled();
+  updateWireVisibility();
+}
+function updateWireVisibility() {
+  // Cable runs are drawn for the assembled stand only.
+  if (showWires && (eT > 0 || sT > 0)) { setWires(false); return; }
+  if (wireGroup) wireGroup.visible = showWires && e < 0.02 && s < 0.02;
 }
 
 // ---------- table layout: every piece laid flat on the work table ----------
@@ -439,6 +490,7 @@ function applyState() {
   // Keep the floor shadow under the lowest part when sub-assemblies drop below the base.
   ground.position.y = Math.min(0, boxAt(e, s, false).min.y - 0.5);
   $('spreadVal').textContent = `${Math.round(s * 100)}%`;
+  updateWireVisibility();
 }
 
 const _p = new THREE.Vector3(), _qq = new THREE.Quaternion(), _m = new THREE.Matrix4(), _one = new THREE.Vector3(1, 1, 1);
@@ -502,7 +554,7 @@ function zoomBy(f) {
 function buildPartsList() {
   const body = $('partsBody');
   const parts = items.filter((i) => i.kind !== 'hw').length;
-  $('partCount').textContent = `${parts} components`;
+  $('partCount').textContent = '';
   for (const sec of cfg.sections) {
     const list = items.filter((i) => i.s === sec.id);
     if (!list.length) continue;
@@ -513,7 +565,7 @@ function buildPartsList() {
       const b = document.createElement('button');
       b.className = 'part' + (it.kind === 'hw' ? ' hw' : '');
       b.dataset.n = it.n;
-      b.innerHTML = `<span class="balloon">${it.n}</span><span class="nm">${it.name}</span><span class="q">×${it.qty}</span>`;
+      b.innerHTML = `<span class="dotm" aria-hidden="true"></span><span class="nm">${it.name}</span>`;
       b.addEventListener('click', () => select(selected === it ? null : it, true));
       b.addEventListener('mouseenter', () => setHover(it));
       b.addEventListener('mouseleave', () => setHover(null));
@@ -734,7 +786,7 @@ function processHover() {
   setHover(it);
   const tip = $('tip');
   if (it) {
-    tip.textContent = `${it.n}  ${it.name}`;
+    tip.textContent = it.name;
     tip.hidden = false;
     const r = canvas.getBoundingClientRect();
     tip.style.left = `${ev.clientX - r.left + 14}px`;
@@ -756,6 +808,7 @@ function goAssembled() {
   pendingFit = { view: null, at: 0.4 };
 }
 function goExploded() {
+  if (showWires) setWires(false);
   eT = 1; sT = 0; syncButtons();
   if (!showLabels) toggleLabels(true);
   pendingFit = { view: cfg.explodeView, at: 0 };
@@ -764,6 +817,7 @@ $('bAssembled').addEventListener('click', goAssembled);
 $('bExploded').addEventListener('click', goExploded);
 
 $('spread').addEventListener('input', (ev) => {
+  if (showWires && ev.target.value > 0) setWires(false);
   sT = s = ev.target.value / 100;
   applyState();
   syncButtons();
@@ -779,6 +833,15 @@ function toggleLabels(force) {
   updateCalloutVisibility();
 }
 $('bLabels').addEventListener('click', () => toggleLabels());
+$('bWires').addEventListener('click', () => {
+  setWires(!showWires);
+  if (showWires) {
+    // Labels would hide the cables; turn to the side where the cables run.
+    if (showLabels) toggleLabels(false);
+    stopAutoRotate();
+    setView(cfg.views.wiring ? 'wiring' : 'iso');
+  }
+});
 $('bEdges').addEventListener('click', () => {
   showEdges = !showEdges; $('bEdges').setAttribute('aria-pressed', String(showEdges)); refreshLook();
 });
@@ -926,14 +989,21 @@ async function saveImage() {
       c.fillStyle = c.strokeStyle; c.beginPath(); c.arc(cl.ax, cl.ay, 2.5, 0, Math.PI * 2); c.fill();
       c.fillStyle = '#fff'; c.strokeStyle = on ? '#e8630a' : '#d3d9df';
       roundRect(c, cl.x, cl.y, cl.w, cl.h, cl.h / 2); c.fill(); c.stroke();
-      const r = 12, bx = cl.x + 3 + r, by = cl.y + cl.h / 2;
-      c.fillStyle = on ? '#e8630a' : '#fff'; c.strokeStyle = on ? '#e8630a' : '#18222d'; c.lineWidth = 1.5;
-      c.beginPath(); c.arc(bx, by, r - 0.75, 0, Math.PI * 2); c.fill(); c.stroke();
-      c.fillStyle = on ? '#fff' : '#18222d'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.font = '600 13px "Barlow Condensed", Arial, sans-serif'; c.fillText(String(cl.it.n), bx, by + 0.5);
-      if (!cl.el.classList.contains('compact')) {
-        c.textAlign = 'left'; c.fillStyle = '#18222d'; c.font = '500 13px Barlow, Arial, sans-serif';
-        c.fillText(cl.it.name, bx + r + 6, by + 0.5);
+      const by = cl.y + cl.h / 2;
+      const numbered = captureMode;
+      let tx = cl.x + 9;
+      if (numbered) {
+        const r = 12, bx = cl.x + 3 + r;
+        c.fillStyle = on ? '#e8630a' : '#fff'; c.strokeStyle = on ? '#e8630a' : '#18222d'; c.lineWidth = 1.5;
+        c.beginPath(); c.arc(bx, by, r - 0.75, 0, Math.PI * 2); c.fill(); c.stroke();
+        c.fillStyle = on ? '#fff' : '#18222d'; c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = '600 13px "Barlow Condensed", Arial, sans-serif'; c.fillText(String(cl.it.n), bx, by + 0.5);
+        tx = bx + r + 6;
+      }
+      if (numbered && cl.el.classList.contains('compact')) { /* number only */ } else {
+        const small = cl.el.classList.contains('compact');
+        c.textAlign = 'left'; c.textBaseline = 'middle'; c.fillStyle = on ? '#b54a05' : '#18222d'; c.font = `500 ${small ? 11 : 13}px Barlow, Arial, sans-serif`;
+        c.fillText(cl.it.name, tx, by + 0.5);
       }
     }
     c.setTransform(1, 0, 0, 1, 0, 0);
@@ -1002,6 +1072,9 @@ function capture(opts = {}) {
   }
   showLabels = !!opts.labels;
   compactLabels = false;
+  showWires = !!opts.wires && !!wireGroup;
+  if (wireGroup) wireGroup.visible = showWires;
+  $('wireLegend').hidden = !showWires;
   labelFilter = opts.labels === 'all' ? null : new Set(callouts.filter((c) => c.it.meshes.some((m) => hlMeshes.has(m))).map((c) => c.it));
   updateCalloutVisibility();
   const box = boxAt(e, s, true);

@@ -4,20 +4,21 @@ P20_STRUTS=['strut_FL','strut_FR','strut_RL','strut_RR','strut_SL','strut_SR']
 SPEC={
  'pro-20': {
   'steps':[
-   ('s1',['xj_front','xj_rear'],['xj_front','xj_rear']),
-   ('s2',['rail_L','rail_R'],['rail_L','rail_R']),
-   ('s3',['out_L','out_R']+P20_FEET,['out_L','out_R']+P20_FEET),
-   ('s4',['pillar_L','pillar_R'],['pillar_L','pillar_R']),
-   ('s5',P20_STRUTS,P20_STRUTS),
-   ('s6',['bridge_low','bridge_top','handle_L','handle_R'],['bridge_low','bridge_top','handle_L','handle_R']),
-   ('s7',['mount','carrier','plate'],['mount','carrier','plate']),
-   ('s8',['motor','prop','rpm'],['motor','prop','rpm']),
-   ('s9',['daq','encl'],['daq','encl']),
+   ('s1',['rail_L','rail_R','cross_F','cross_R'],['rail_L','rail_R','cross_F','cross_R']),
+   ('s2',['pillar_L','pillar_R'],['pillar_L','pillar_R']),
+   ('s3',['out_L','out_R','uclamp_F','uclamp_R','fclamp_L','fclamp_R'],['out_L','out_R','uclamp_F','uclamp_R','fclamp_L','fclamp_R']),
+   ('s4',['brace_FL','brace_FR','brace_RL','brace_RR','brace_SL','brace_SR'],['brace_FL','brace_FR','brace_RL','brace_RR','brace_SL','brace_SR']),
+   ('s5',['bridge_mid','bridge_top','handle_L','handle_R'],['bridge_mid','bridge_top','handle_L','handle_R']),
+   ('s6',['vsupport','vcell'],['vsupport','vcell']),
+   ('s7',['sheet','hcells'],['sheet','hcells']),
+   ('s8',['plate','vib','motor','rpm','prop'],['plate','vib','motor','rpm','prop']),
+   ('s9',['daq','current','lccover','encl'],['daq','current','lccover','encl']),
    ('s10',[],[]),
   ],
-  'head':['mount','carrier','plate','motor','prop','rpm','encl'],
-  'daq':['daq','pillar_L','pillar_R','bridge_low'],
-  'routeDir':[-0.9,0.35,-1.0],
+  'head':['bridge_top','vsupport','vcell','sheet','hcells','lccover','plate','vib','rpm','motor','prop','encl'],
+  'daq':['daq','current','pillar_L','pillar_R','bridge_mid','bridge_top','handle_L','handle_R'],
+  'daqDir':[0.55,0.45,-1.0],
+  'routeDir':[0.55,0.42,-1.0],
  },
  'compact-5': {
   'steps':[
@@ -28,12 +29,13 @@ SPEC={
    ('s5',['lcb','tcell','holder'],['lcb','tcell','holder']),
    ('s6',['qcell_A','qcell_B','qarm_A','qarm_B','mount'],['qcell_A','qcell_B','qarm_A','qarm_B','mount']),
    ('s7',['motor','prop'],['motor','prop']),
-   ('s8',['rpm','vib','current'],['rpm','vib','current']),
+   ('s8',['rpm','vib','current','daq'],['rpm','vib','current','daq']),
    ('s9',[],[]),
   ],
   'head':['lcb','tcell','holder','vib','qcell_A','qcell_B','qarm_A','qarm_B','mount','motor','prop','arm'],
-  'daq':['current','mast','vib','holder'],
-  'routeDir':[-0.9,0.35,-1.0],
+  'daq':['daq','current','mast','arm','cross_A','cross_B','base'],
+  'daqDir':[0.75,0.45,1.0],
+  'routeDir':[0.55,0.35,1.2],
  },
  'ultra-50': {
   'steps':[
@@ -46,7 +48,7 @@ SPEC={
    ('s7',['holder','tcell','support'],['holder','tcell','support']),
    ('s8',['plate','vib','goose'],['plate','vib','goose']),
    ('s9',['daq'],['daq']),
-   ('s10',['cs_bot','cs_pcb','cs_top'],['cs_bot','cs_pcb','cs_top']),
+   ('s10',['cs'],['cs']),
    ('s11',[],[]),
   ],
   'head':['gusset','vcell','holder','tcell','support','plate','vib','goose','beam'],
@@ -70,8 +72,8 @@ for m,sp in SPEC.items():
         else: j['hideItems'] = ['Slot cover strips']
         J.append(j)
     J.append({'name':'head','show':sp['head'],'hl':[],'view':'side','explode':1,'labels':'all','pad':1.05})
-    J.append({'name':'daq','show':sp['daq'],'hl':[p for p in sp['daq'] if p in ('daq','current','cs_bot','cs_pcb','cs_top')],'dir':[1,0.9,1.0] if m!='pro-20' else [-0.7,0.6,-1.0],'explode':0,'labels':'hl','pad':1.1})
-    J.append({'name':'routes','dir':sp['routeDir'],'labels':False,'pad':1.0})
+    J.append({'name':'daq','show':sp['daq'],'hl':[p for p in sp['daq'] if p in ('daq','current','cs')],'dir':sp.get('daqDir',[1,0.9,1.0]),'explode':0,'labels':'hl','pad':1.1})
+    J.append({'name':'routes','dir':sp['routeDir'],'labels':False,'wires':True,'pad':1.0})
     jobs[m]=J
 json.dump(jobs,open('figjobs.json','w'),indent=0)
 print({k:len(v) for k,v in jobs.items()})

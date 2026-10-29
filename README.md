@@ -68,6 +68,8 @@ visitor's email app with the request filled in, addressed to both recipients.
 - **Auto-rotate** starts slowly whenever a design is opened and stops as soon as the visitor interacts. The Rotate button toggles it.
 - **Exploded** separates whole sub-assemblies in straight lines parallel to the side view.
 - **Spread 0–100 %** moves every component together onto a work table; back to 0 % reassembles it.
+- **Wiring** shows the cable runs from every sensor to the ROTRIX DAQ unit, with a colour legend, on the assembled stand. The runs are listed as `wires` in each model file (model coordinates in mm).
+- **Components** lists part names only; quantities, sizes and materials are in the detail card that opens on a click.
 - **Save image** downloads a PNG of the current view with labels, model name, state and view name.
 - **User manual** downloads the PDF for the selected design.
 
@@ -90,3 +92,12 @@ node tools/slotcovers.mjs source.glb model/<name>.glb covers.json "<extrusion no
 ```
 
 then add the printed cover node numbers to the model's catalog in `models/`.
+The RTS Pro 20 model (2026 design) already has the covers drawn in CAD, so it is used as exported.
+
+## Updating a model from CAD
+
+1. Flatten the SolidWorks GLB: `node tools/flatten.mjs src.glb flat.glb names.json 1000`.
+2. Graft extra parts or drop unwanted ones with `node tools/graft.mjs spec.json` (see the comment at the top of the
+   script). This is how the current sensor (from the RTS Ultra 50) was added to the RTS Pro 20 under the right handle,
+   the ROTRIX DAQ unit (from the RTS Pro 20) was added to the RTS Compact 5, and the PCB detail was lightened.
+3. For the RTS Pro 20, `python3 tools/classify20.py` regenerates `models/pro-20.nodes.js` (pieces, fasteners, covers).

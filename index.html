@@ -93,6 +93,7 @@
     </label>
     <div class="grp">
       <button id="bLabels" aria-pressed="false">Labels</button>
+      <button id="bWires" aria-pressed="false" title="Show how the sensor cables run to the DAQ unit">Wiring</button>
       <button id="bEdges" aria-pressed="true">Edges</button>
       <button id="bRotate" aria-pressed="true">Rotate</button>
     </div>
@@ -114,6 +115,7 @@
     </div>
   </nav>
 
+  <aside id="wireLegend" class="panel" hidden aria-live="polite"></aside>
   <p id="hint">Drag to rotate, right-drag to pan, scroll to zoom. Exploded separates the sub-assemblies; Spread lays every component out on the table.</p>
   <div id="tip" role="tooltip" hidden></div>
   <div id="toast" role="status" hidden></div>

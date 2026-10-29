@@ -2,7 +2,7 @@ import asyncio, sys, json, threading, functools, http.server, socketserver
 from playwright.async_api import async_playwright
 class Q(http.server.SimpleHTTPRequestHandler):
     def log_message(self,*a): pass
-srv=socketserver.ThreadingTCPServer(('127.0.0.1',0),functools.partial(Q,directory='/home/claude/build/site')); port=srv.server_address[1]
+srv=socketserver.ThreadingTCPServer(('127.0.0.1',0),functools.partial(Q,directory='/home/claude/dynox-viewer')); port=srv.server_address[1]
 threading.Thread(target=srv.serve_forever,daemon=True).start()
 jobs=json.load(open('/home/claude/manual/figjobs.json')); routes=json.load(open('/home/claude/manual/routes.json'))
 models=sys.argv[1].split(','); only=sys.argv[2].split(',') if len(sys.argv)>2 else None
@@ -24,8 +24,6 @@ async def main():
                 await pg.evaluate('(o)=>__rts.capture(o)',j)
                 await pg.wait_for_timeout(1500)
                 await pg.screenshot(path=f'/home/claude/manual/fig/{m}_{j["name"]}.png',timeout=180000)
-                if j['name']=='routes':
-                    proj[m]=await pg.evaluate('(R)=>R.map(r=>({key:r.key,pts:r.pts.map(p=>__rts.project(p))}))',routes[m])
             await pg.close()
         await b.close()
         old={}

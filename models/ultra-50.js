@@ -7,7 +7,8 @@ import G from './ultra-50.nodes.js';
 const COVERS = { base: 1227, beam: 1228, pillar_FL: 1229, pillar_FR: 1230, pillar_RR: 1231, pillar_RL: 1232,
   out_RF: 1233, out_LF: 1234, out_RR: 1235, out_LR: 1236, brace_L: 1237, brace_R: 1238,
   sbrace_RF: 1239, sbrace_LF: 1240, sbrace_RR: 1241, sbrace_LR: 1242 };
-const P = Object.fromEntries(Object.entries(G.pieces).map(([k, v]) => [k, COVERS[k] ? [...v, COVERS[k]] : v]));
+const PIECES = { ...G.pieces, cs: [...G.pieces.cs_bot, ...G.pieces.cs_pcb, ...G.pieces.cs_top] };
+const P = Object.fromEntries(Object.entries(PIECES).map(([k, v]) => [k, COVERS[k] ? [...v, COVERS[k]] : v]));
 const COVER_NODES = Object.values(COVERS);
 const HEAD = 90; // the head lifts with the top beam in the exploded view
 
@@ -18,7 +19,7 @@ const EX = {
   sbrace_RF: [0, 0, -80], sbrace_LF: [0, 0, -80], sbrace_RR: [0, 0, 80], sbrace_LR: [0, 0, 80],
   brace_L: [0, -60, 110], brace_R: [0, -60, 110],
   beam: [0, HEAD, 0], daq: [0, 190, 0],
-  cs_bot: [25, 0, 120], cs_pcb: [0, 0, 120], cs_top: [-25, 0, 120],
+  cs: [0, 0, 120], // the current sensor moves and lays out as one product
   gusset: [0, HEAD, 0], vcell: [0, HEAD, -40], holder: [0, HEAD, -90], tcell: [0, HEAD, -140],
   support: [0, HEAD, -190], vib: [0, HEAD + 60, -215], plate: [0, HEAD, -250], goose: [0, HEAD, -330],
 };
@@ -30,11 +31,11 @@ const FLAT = {
 const ORDER = [
   'base', 'pillar_FL', 'pillar_FR', 'pillar_RL', 'pillar_RR', 'beam', 'out_RF', 'out_LF', 'out_RR', 'out_LR',
   'sbrace_RF', 'sbrace_LF', 'sbrace_RR', 'sbrace_LR', 'brace_L', 'brace_R',
-  'plate', 'support', 'tcell', 'holder', 'vcell', 'gusset', 'goose', 'vib', 'daq', 'cs_bot', 'cs_pcb', 'cs_top',
+  'plate', 'support', 'tcell', 'holder', 'vcell', 'gusset', 'goose', 'vib', 'daq', 'cs',
 ];
 const pieces = ORDER.map((id) => ({ id, nodes: P[id], ex: EX[id] || [0, 0, 0], flat: FLAT[id] }));
 const N = (...ids) => ids.flatMap((id) => P[id]);
-const own = (...ids) => ids.flatMap((id) => G.pieces[id]); // a piece's own nodes, without its slot covers
+const own = (...ids) => ids.flatMap((id) => PIECES[id]); // a piece's own nodes, without its slot covers
 
 export default {
   id: 'ultra-50',
@@ -49,6 +50,17 @@ export default {
     table: [0.85, 1.25, -1.05],
   },
   explodeView: 'side',
+  // Cable runs for the wiring view (model coordinates, mm). Every run ends at the ROTRIX DAQ unit.
+  wireRadius: 3.6,
+  wires: [
+    { key: 'thrust', label: 'Thrust load cell', color: '#e8630a', pts: [[-45, 860, 118], [-70, 786, 150], [-70, 786, 300], [-60, 800, 325]] },
+    { key: 'torque', label: 'Torque load cells', color: '#1f5c99', pts: [[-45, 860, -41], [-25, 792, 0], [-25, 786, 300], [-35, 800, 325]] },
+    { key: 'rpm', label: 'RPM sensor', color: '#2a9d8f', pts: [[23, 700, -150], [0, 780, -110], [0, 786, 300], [-25, 800, 325]] },
+    { key: 'vib', label: 'Vibration sensor', color: '#8e5bd6', pts: [[-45, 846, -126], [-15, 800, -100], [-15, 786, 300], [-20, 800, 330]] },
+    { key: 'current', label: 'Current sensor', color: '#d62828', pts: [[-5, 554, 446], [-5, 700, 420], [-5, 786, 400], [-30, 800, 380]] },
+    { key: 'power', label: 'Battery power (through the current sensor)', color: '#5b1b1b', r: 1.5, pts: [[-5, 30, 700], [0, 40, 420], [0, 554, 440], [0, 786, 420], [0, 792, -100], [-45, 900, -150]] },
+    { key: 'usb', label: 'USB to PC', color: '#4a5560', pts: [[-85, 800, 400], [-85, 700, 418], [-85, 40, 418], [-85, 30, 700]] },
+  ],
   matOverrides: G.mats,
   sections: [
     { id: 'frame', name: 'Frame', note: 'Steps 1 to 5' },
@@ -260,7 +272,7 @@ export default {
     },
     {
       s: 'elec', name: 'Current sensor module', code: 'Inline current sensor',
-      qty: 1, mat: 'printed', nodes: own('cs_bot', 'cs_pcb', 'cs_top'),
+      qty: 1, mat: 'printed', nodes: own('cs'),
       summary: 'A current sensor in a two-part case, mounted on the rear pillar.',
       size: '58 × 90 × 27 mm case',
       material: '3D-printed case, current sensor board',
