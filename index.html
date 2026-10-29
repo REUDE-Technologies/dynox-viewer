@@ -1,17 +1,15 @@
 <!doctype html>
-<html lang="en" data-theme="light">
+<html lang="en" data-bg="studio">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>RTS Compact 5 | 5 kgf thrust stand | 3D viewer</title>
-<meta name="description" content="Interactive 3D model of the RTS Compact 5 thrust stand by REUDE Technologies. Rotate, zoom, pan and explode the assembly to see every component.">
-<link rel="icon" href="favicon-32.png?v=2" type="image/png" sizes="32x32">
-<link rel="icon" href="favicon-512.png?v=2" type="image/png" sizes="512x512">
-<link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
+<title>DynoX thrust stands | REUDE Technologies</title>
+<meta name="description" content="Interactive 3D models of the DynoX thrust stands by REUDE Technologies: RTS Compact 5, RTS Pro 20 and RTS Ultra 50. Explore every component, download the user manual and request a quote.">
+<link rel="icon" type="image/png" href="assets/reude-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=17">
+<link rel="stylesheet" href="styles.css">
 <script type="importmap">
 { "imports": {
   "three": "./vendor/three/build/three.module.js",
@@ -21,45 +19,39 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="scene" aria-label="3D model of the RTS Compact 5 thrust stand"></canvas>
-  <div id="vignette" aria-hidden="true"></div>
+  <canvas id="scene" aria-label="3D model of the thrust stand"></canvas>
   <svg id="leaders" aria-hidden="true"></svg>
   <div id="labels" aria-hidden="true"></div>
 
-  <header class="plate">
-    <img class="brand" src="Logo-Primary.png?v=2" alt="REUDE Technologies">
-    <div>
-      <label class="model-pick">
-        <span class="sr">Stand</span>
-        <select id="modelPick" aria-label="Choose thrust stand">
-          <option value="compact5" data-short="5 kgf">RTS Compact 5 · 5 kgf</option>
-          <option value="pro20" data-short="20 kgf">RTS Pro 20 · 20 kgf</option>
-          <option value="ultra50" data-short="50 kgf">RTS Ultra 50 · 50 kgf</option>
-        </select>
-      </label>
-      <h1 id="plateTitle">RTS Compact 5</h1>
-      <p id="plateTag">5 kgf thrust and torque stand</p>
+  <header class="topbar">
+    <div class="brand">
+      <span class="dynox">DynoX</span>
+      <span class="by">designed by</span>
+      <img src="assets/reude-lockup.png" alt="REUDE Technologies" class="lockup" width="152" height="40">
+      <img src="assets/reude-mark.png" alt="REUDE Technologies" class="mark" width="30" height="36">
+    </div>
+    <nav class="models" aria-label="Choose a design">
+      <button data-model="compact-5" aria-pressed="true">RTS Compact 5<span>5 kgf</span></button>
+      <button data-model="pro-20" aria-pressed="false">RTS Pro 20<span>20 kgf</span></button>
+      <button data-model="ultra-50" aria-pressed="false">RTS Ultra 50<span>50 kgf</span></button>
+    </nav>
+    <div class="actions">
+      <a id="bManual" class="btn" href="#" download>User manual</a>
+      <button id="bSave" class="btn">Save image</button>
+      <button id="bQuote" class="btn primary">Get a quote</button>
     </div>
   </header>
 
-  <div id="downloads">
-    <button class="tool" id="bQuote" type="button"><span class="full">Get a quote</span><span class="short">Quote</span></button>
-    <a  id="manualBtn" class="tool" href="REUDE_DynoX_RTS_Pro_20_ThrustStand_User_Manual_V2.0_Final.pdf" download="REUDE_DynoX_RTS_Pro_20_ThrustStand_User_Manual_V2.0_Final.pdf"><span class="full">Download manual</span><span class="short">Manual</span></a>
-    <button class="tool" id="bShot" type="button"><span class="full">Save image</span><span class="short">Image</span></button>
-    <div class="menu-pop" id="shotPop" hidden></div>
+  <div class="plate">
+    <h1 id="plateTitle">DynoX</h1>
+    <p id="plateSub"></p>
   </div>
 
-  <aside id="parts" class="panel collapsed no-bom" aria-label="Assembly">
-    <div class="dash-head">
-      <div class="dash-tabs" role="tablist" aria-label="Assembly lists">
-        <button type="button" id="tabParts" role="tab" aria-selected="true" aria-controls="partsBody">Parts <span class="count" id="partCount"></span></button>
-        <button type="button" id="tabBom" role="tab" aria-selected="false" aria-controls="bomBody" title="Bill of materials" hidden>BOM</button>
-      </div>
-      <button class="panel-toggle" id="partsToggle" aria-expanded="false" aria-controls="partsBody bomBody">Parts</button>
-    </div>
-    <div id="partsBody" role="tabpanel"></div>
-    <div id="bomBody" role="tabpanel" hidden></div>
-    <button type="button" id="dashSize" class="dash-size" aria-label="Resize dashboard" title="Drag to resize. Double-click to reset."></button>
+  <aside id="parts" class="panel" aria-label="Components">
+    <button class="panel-toggle" id="partsToggle" aria-expanded="true" aria-controls="partsBody" title="Hide the components list">
+      <span>Components</span><span class="count" id="partCount"></span><span class="chev" aria-hidden="true"></span>
+    </button>
+    <div id="partsBody"></div>
   </aside>
 
   <section id="detail" class="panel" hidden aria-live="polite">
@@ -67,11 +59,22 @@
       <span class="balloon" id="dNum"></span>
       <div>
         <h2 id="dName"></h2>
-        <p class="meta" id="dMeta"></p>
+        <p class="meta" id="dCode"></p>
       </div>
       <button class="icon" id="dClose" aria-label="Clear selection">✕</button>
     </div>
-    <p id="dDesc"></p>
+    <div id="detailBody">
+      <p id="dSummary"></p>
+      <dl id="dSpecs"></dl>
+      <div id="dWhyWrap">
+        <h4>Why it matters</h4>
+        <p id="dWhy"></p>
+      </div>
+      <div id="dStepsWrap">
+        <h4>How to assemble</h4>
+        <ol id="dSteps"></ol>
+      </div>
+    </div>
     <div class="detail-actions">
       <button id="dFocus">Zoom to part</button>
       <button id="dIsolate" aria-pressed="false">Show only this</button>
@@ -83,18 +86,20 @@
       <button id="bAssembled" aria-pressed="true">Assembled</button>
       <button id="bExploded" aria-pressed="false">Exploded</button>
     </div>
-    <label class="spread">
+    <label class="spread" title="Lay every component out on the table">
       <span>Spread</span>
-      <input id="spread" type="range" min="0" max="100" value="0" aria-label="Explode distance">
+      <input id="spread" type="range" min="0" max="100" value="0" aria-label="Spread components onto the table">
+      <output id="spreadVal">0%</output>
     </label>
     <div class="grp">
       <button id="bLabels" aria-pressed="false">Labels</button>
-      <button id="bEdges" aria-pressed="false">Edges</button>
+      <button id="bEdges" aria-pressed="true">Edges</button>
+      <button id="bRotate" aria-pressed="true">Rotate</button>
     </div>
     <div class="grp" role="group" aria-label="Camera presets">
       <button data-view="iso">Iso</button>
-      <button data-view="front">Front</button>
       <button data-view="side">Side</button>
+      <button data-view="front">Front</button>
       <button data-view="top">Top</button>
     </div>
     <div class="grp" role="group" aria-label="Zoom">
@@ -102,57 +107,142 @@
       <button id="bZoomIn" aria-label="Zoom in">+</button>
       <button id="bFit">Fit</button>
     </div>
+    <div class="grp swatches" role="group" aria-label="Background">
+      <button data-bg="studio" aria-label="Studio background" title="Studio"><i></i></button>
+      <button data-bg="light" aria-label="Light background" title="Light"><i></i></button>
+      <button data-bg="white" aria-label="White background" title="White"><i></i></button>
+    </div>
   </nav>
 
-  <p id="hint">Drag to turn the stand. Scroll to zoom, right-drag to pan, and click a part to identify it.</p>
-
-  <dialog id="quoteDlg" aria-labelledby="quoteTitle">
-    <button class="icon" id="quoteClose" type="button" aria-label="Close">✕</button>
-    <h2 id="quoteTitle">Request a quote</h2>
-    <p>Scan this code with your phone to fill the ROTRIX SRS form for the RTS Compact 5.</p>
-    <div id="qr" role="img" aria-label="QR code for the quote form"></div>
-    <a class="quote-open" id="quoteOpen" href="quote.html">Fill the form on this device</a>
-  </dialog>
-
-  <dialog id="uploadDlg" aria-labelledby="uploadTitle">
-    <button class="icon" id="uploadClose" type="button" aria-label="Close">✕</button>
-    <h2 id="uploadTitle">Upload a design</h2>
-    <p class="upload-lead">Upload a <strong>.glb</strong> file, name it, then share the link so anyone can view it here.</p>
-    <label class="upload-field">
-      <span>Design name</span>
-      <input id="uploadName" type="text" maxlength="120" placeholder="My thrust stand" autocomplete="off">
-    </label>
-    <label class="upload-field">
-      <span>GLB file</span>
-      <input id="uploadFile" type="file" accept=".glb,model/gltf-binary">
-    </label>
-    <p id="uploadStatus" class="upload-status" role="status"></p>
-    <div class="upload-actions">
-      <button type="button" class="tool primary" id="uploadGo">Upload &amp; open</button>
-    </div>
-    <div id="uploadShare" class="upload-share" hidden>
-      <label class="upload-field">
-        <span>Share link</span>
-        <input id="uploadLink" type="text" readonly>
-      </label>
-      <button type="button" class="tool" id="uploadCopy">Copy link</button>
-    </div>
-  </dialog>
-
-  <div id="sharedBar" class="shared-bar" hidden>
-    <label class="upload-field flat">
-      <span>Shared design name</span>
-      <input id="sharedTitle" type="text" maxlength="120" aria-label="Edit design name">
-    </label>
-    <button type="button" class="tool" id="sharedSave">Save name</button>
-    <button type="button" class="tool" id="sharedCopy">Copy link</button>
-    <span id="sharedNote" class="upload-status" role="status"></span>
-  </div>
-
+  <p id="hint">Drag to rotate, right-drag to pan, scroll to zoom. Exploded separates the sub-assemblies; Spread lays every component out on the table.</p>
   <div id="tip" role="tooltip" hidden></div>
-  <div id="loading"><div class="bar"><i id="loadBar"></i></div><span id="loadText">Loading model</span></div>
+  <div id="toast" role="status" hidden></div>
+  <div id="loading"><img src="assets/reude-mark.png" alt="" width="56" height="66"><div class="bar"><i id="loadBar"></i></div><span id="loadText">Loading model</span></div>
+
+  <div id="quote" class="modal" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="qTitle">
+      <div class="sheet-head">
+        <div>
+          <h2 id="qTitle">Get a quote</h2>
+          <p>Tell us what you need to test. Your requirements go straight to the REUDE sales team.</p>
+        </div>
+        <button class="icon" id="qClose" aria-label="Close">✕</button>
+      </div>
+      <div class="sheet-body">
+        <form id="qForm" novalidate>
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <fieldset>
+            <legend>Contact</legend>
+            <div class="row">
+              <label>Name<input id="qName" name="name" required autocomplete="name"></label>
+              <label>Organisation<input name="organisation" required autocomplete="organization"></label>
+            </div>
+            <div class="row">
+              <label>Designation<input name="designation" autocomplete="organization-title"></label>
+              <label>Email<input name="email" type="email" required autocomplete="email"></label>
+            </div>
+            <div class="row">
+              <label>Phone<input name="phone" type="tel" required autocomplete="tel"></label>
+              <label>City<input name="city" autocomplete="address-level2"></label>
+              <label>Country<input name="country" value="India" autocomplete="country-name"></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Product</legend>
+            <div class="row">
+              <label>Model of interest
+                <select id="qModel" name="model" required>
+                  <option>RTS Compact 5 (5 kgf)</option>
+                  <option>RTS Pro 20 (20 kgf)</option>
+                  <option>RTS Ultra 50 (50 kgf)</option>
+                  <option>Custom or higher capacity</option>
+                </select>
+              </label>
+              <label>Quantity<input name="quantity" type="number" min="1" value="1"></label>
+              <label>Application
+                <select name="application">
+                  <option>Research and development</option>
+                  <option>Production quality testing</option>
+                  <option>Education and training</option>
+                  <option>Certification and validation</option>
+                  <option>Other</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Test requirements</legend>
+            <div class="row">
+              <label>Maximum thrust (kgf)<input name="thrust" inputmode="decimal"></label>
+              <label>Maximum torque (Nm)<input name="torque" inputmode="decimal"></label>
+              <label>Maximum speed (RPM)<input name="rpm" inputmode="numeric"></label>
+            </div>
+            <div class="row">
+              <label>Battery voltage (S)<input name="voltage" placeholder="e.g. 6S to 12S"></label>
+              <label>Maximum current (A)<input name="current" inputmode="decimal"></label>
+              <label>Propeller diameter (inch)<input name="prop" inputmode="decimal"></label>
+            </div>
+            <div class="row">
+              <label>Motor model or size<input name="motor" placeholder="e.g. 8318, 120 KV"></label>
+              <label>Test environment
+                <select name="environment"><option>Indoor</option><option>Outdoor</option><option>Both</option></select>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Measurement and software</legend>
+            <div class="checks" role="group" aria-label="Parameters to measure">
+              <label><input type="checkbox" name="measure" value="Thrust" checked>Thrust</label>
+              <label><input type="checkbox" name="measure" value="Torque" checked>Torque</label>
+              <label><input type="checkbox" name="measure" value="RPM" checked>RPM</label>
+              <label><input type="checkbox" name="measure" value="Voltage" checked>Voltage</label>
+              <label><input type="checkbox" name="measure" value="Current" checked>Current</label>
+              <label><input type="checkbox" name="measure" value="Vibration">Vibration</label>
+              <label><input type="checkbox" name="measure" value="Temperature">Temperature</label>
+              <label><input type="checkbox" name="measure" value="Efficiency">Efficiency</label>
+            </div>
+            <div class="row">
+              <label>Sampling rate (Hz)<input name="sampling" inputmode="numeric"></label>
+              <label>Data interface
+                <select name="interface"><option>USB</option><option>Ethernet</option><option>Wireless</option></select>
+              </label>
+              <label>Software
+                <select name="software"><option>ROTRIX test control</option><option>ROTRIX and ROTRIDASH analytics</option></select>
+              </label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Commercial</legend>
+            <div class="row">
+              <label>Installation and training
+                <select name="installation"><option>Required</option><option>Not required</option></select>
+              </label>
+              <label>Delivery location<input name="location"></label>
+              <label>Required by<input name="date" type="date"></label>
+            </div>
+            <div class="row">
+              <label>Budget range (optional)<input name="budget"></label>
+            </div>
+            <label class="wide">Additional requirements<textarea name="notes" rows="3"></textarea></label>
+            <label class="check"><input type="checkbox" name="copy" value="yes">Email me a copy</label>
+          </fieldset>
+          <p id="qStatus" class="q-status" hidden></p>
+          <div class="sheet-actions">
+            <button type="submit" id="qSend" class="btn primary">Send request</button>
+            <button type="button" id="qCancel" class="btn">Cancel</button>
+          </div>
+        </form>
+        <aside class="qr">
+          <canvas id="qQr" width="200" height="200" aria-label="QR code that opens this form"></canvas>
+          <p>Scan to open this form on a phone.</p>
+          <button type="button" id="qQrDownload" class="btn">Download QR code</button>
+          <a id="qPdf" class="btn" href="assets/DynoX-SRS-form.pdf" download="DynoX-SRS-form.pdf">Download form (PDF)</a>
+          <p class="small">Sent to cmo_ira@reude.tech and business@reude.tech</p>
+        </aside>
+      </div>
+    </div>
+  </div>
 </div>
-<script>window.RTS_MODEL_URL = 'model/5kg.glb';</script>
-<script type="module" src="app.js?v=81"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

@@ -1,135 +1,92 @@
-# REUDE DynoX — Interactive 3D Thrust Stand Viewer
+# DynoX 3D product viewer — REUDE Technologies
 
-A high-performance, web-based 3D product viewer and engineering assembly visualizer for the **DynoX** series of thrust and torque test stands by **REUDE Technologies**.
+Interactive viewer for the DynoX thrust stands: **RTS Compact 5** (5 kgf), **RTS Pro 20** (20 kgf)
+and **RTS Ultra 50** (50 kgf). Customers can rotate, zoom and pan; switch designs; see the exploded
+sub-assemblies; lay every component out on the table; download the user manual; save images of the
+current view; and send a quote request (SRS form) to the REUDE sales team.
 
-Built with pure vanilla Three.js and ES Modules. Fully static, zero-build architecture that runs in any modern browser.
+## Links to send customers
 
----
+| Link | Opens |
+|---|---|
+| `https://<your-domain>/` | RTS Compact 5 |
+| `https://<your-domain>/?model=pro-20` | RTS Pro 20 |
+| `https://<your-domain>/?model=ultra-50` | RTS Ultra 50 |
+| `https://<your-domain>/?quote=1` | Quote request form (this is what the QR code opens) |
 
-## Supported Stand Models
-
-| Model | Rating | Thrust Axis | Primary Applications | 3D Model Asset |
-| :--- | :--- | :---: | :--- | :--- |
-| **RTS Compact 5** | 5 kgf (50 N) | `+X` | Micro/mini drone motors, small UAV propellers, benchtop R&D | `model/5kg.glb` |
-| **RTS Pro 20** | 20 kgf (200 N) | `+Z` | Industrial multicopters, eVTOL subscale testing, high-torque BLDC | `model/20kg.glb` |
-| **RTS Ultra 50** | 50 kgf (500 N) | `-Z` | Heavy-lift UAVs, agricultural drones, large-diameter propulsion | `model/50kg.glb` |
-
----
-
-## Key Features
-
-* **Photorealistic 3D WebGL Rendering**:
-  * Physically-Based Rendering (PBR) materials: anodized 6061 aluminium, carbon fiber weave, matte 3D-printed PLA, green solder-mask PCB, and optical acrylic.
-  * Studio softbox lighting, directional sun with PCF soft shadows, and warm engineering beige backdrop.
-* **Engineering Exploded Views**:
-  * Smooth, interpolated explode animation with interactive distance slider (0% assembled to 100% exploded).
-  * Generous component spacing (130 mm – 160 mm uniform intervals) along natural mechanical assembly axes with zero overlapping or visual crowding.
-  * **DAQ Module Subassembly**: Tiered vertical explosion directly over its chassis mount (housing seated on rail, PCB at +55 mm, REUDE logo lid at +110 mm).
-  * **Propeller Blades**: Synchronized grouping in a dedicated forward section ahead of the hub lock-nut and clamp collar.
-* **Interactive Parts Catalog & Callout Labels**:
-  * Interactive SVG leader lines and numbered callout pins dynamically tracked to 3D parts.
-  * Collapsible parts dashboard grouped by assembly section (Frame and base, Force-sensing head, Motor and propeller, Sensors and electronics, Fasteners).
-  * Part selection with isolate mode, zoom-to-part camera framing, and material specifications.
-* **Calibrated Camera Presets**:
-  * Model-aware camera orientations for **Front** (direct head-on view of motor/propeller face), **Side** (profile elevation), **Top** (overhead bench plan), and **Iso** (isometric perspective).
-* **Quotation & Documentation Suite**:
-  * Model-specific PDF user manual downloads (`manuals/compact5.pdf`, `manuals/pro20.pdf`, `manuals/ultra50.pdf`).
-  * "Get a quote" modal with ROTRIX SRS form integration and mobile QR code scanner.
-  * High-resolution image capture with studio vignette overlay (`Save image`).
-
----
-
-## Project Structure
+## Folder layout
 
 ```
-dynox-3d-viewer/
-├── index.html                           # Main application HTML shell
-├── styles.css                           # UI design system & responsive layout (warm beige theme)
-├── app.js                               # Core Three.js scene, rendering, camera, and interaction logic
-├── models.js                            # Model registry, exploded-view vectors, and part categorization
-├── catalog.js                           # Component taxonomy, metadata, and default catalog items
-├── bom.js                               # Bill of materials pricing, currency, and reference mapping
-├── bom.html                             # Printable / exportable Bill of Materials page
-├── quote.html                           # Interactive ROTRIX SRS quote request form
-├── designs-api.js                       # Supabase client integration for shared design uploads
-├── Logo-Primary.png                     # Cropped, full-resolution REUDE Technologies logo
-├── dynox_thrust_stands_components.csv   # Consolidated components breakdown for all 3 models (77 rows)
-├── DESIGNS_BACKEND_DOCUMENTATION.md     # Complete backend architecture & API reference
-├── package.json                         # Project metadata and local launch scripts
-├── vercel.json                          # Production deployment headers and caching rules
-│
-├── model/                               # 3D CAD assets (Meshopt-compressed GLTF binaries)
-│   ├── 5kg.glb                          # RTS Compact 5 model
-│   ├── 20kg.glb                         # RTS Pro 20 model
-│   └── 50kg.glb                         # RTS Ultra 50 model
-│
-├── manuals/                             # Official PDF user manuals per model
-│   ├── compact5.pdf                     # RTS Compact 5 User Manual
-│   ├── pro20.pdf                        # RTS Pro 20 User Manual
-│   └── ultra50.pdf                      # RTS Ultra 50 User Manual
-│
-├── vendor/                              # Bundled third-party libraries (no CDN dependency)
-│   ├── three/                           # Three.js r160 core and addons (OrbitControls, GLTFLoader)
-│   └── qr/                              # QR code generator library
-│
-└── tools/                               # Development and data export utilities
-    ├── convert-step.mjs                 # SolidWorks STEP to GLB converter
-    └── generate-components-csv.mjs      # CSV components generator script
+index.html, styles.css, app.js      page and viewer engine (three.js r160 in vendor/)
+quote.js                            Get a quote form, QR code, email fallback
+api/quote.js                        Vercel function that emails the form (needs SMTP settings)
+models/*.js                         catalogs: names, descriptions, sub-assemblies, exploded offsets
+models/*.nodes.js                   generated maps of 3D bodies to parts (do not hand-edit)
+model/*.glb                         compressed 3D models
+manuals/*.pdf                       user manuals (downloaded by the User manual button)
+assets/                             REUDE logo files and the printable SRS form PDF
+vendor/                             three.js and the QR code library
 ```
 
----
+## Deploy: GitHub → Vercel, assets on Cloudflare R2
 
-## Quick Start (Local Development)
+**1. Vercel (connected to GitHub, deploys on every push)**
+1. In Vercel, choose Add New → Project and import `REUDE-Technologies/dynox-viewer`.
+2. Framework preset: **Other**. Build command: empty. Output directory: `./`. Deploy.
+3. Every push to `main` now redeploys automatically; other branches get preview links.
 
-Because the viewer uses modern JavaScript ES Modules (`import`/`export`), it must be served through a local HTTP server (browsers block module loading over `file://` protocol):
+**2. Cloudflare R2 (3D models and manuals)**
+1. Cloudflare dashboard → R2 → Create bucket, e.g. `reude-assets`.
+2. Bucket → Settings → Public access: connect a custom domain such as `assets.reude.tech`
+   (or enable the r2.dev URL for testing).
+3. Bucket → Settings → CORS policy: paste `tools/r2-cors.json` (add your own domain if different).
+4. Upload the files once: `npx wrangler login`, then `tools/upload-r2.sh reude-assets dynox`.
+5. In `site.config.js` set `ASSET_BASE` to e.g. `https://assets.reude.tech/dynox/`, commit and push.
 
-### Option 1: Python (Recommended, no install required)
-```bash
-python -m http.server 8765
+The viewer loads models and manuals from R2 and falls back to the copies in this repo if R2 is
+unreachable. To update a model or manual later, re-run the upload script; no redeploy is needed
+unless the file name changes.
+
+### Make Get a quote send email
+
+The form posts to `/api/quote`, which emails **cmo_ira@reude.tech** and **business@reude.tech**
+with the customer as reply-to. Add these in Vercel → Project → Settings → Environment Variables, then redeploy:
+
+| Variable | Example |
+|---|---|
+| `SMTP_HOST` | `smtp.zoho.in` or `smtp.gmail.com` |
+| `SMTP_PORT` | `465` |
+| `SMTP_USER` | the mailbox that sends, e.g. `noreply@reude.tech` |
+| `SMTP_PASS` | its password or app password |
+| `MAIL_FROM` | `DynoX Viewer <noreply@reude.tech>` |
+
+Until these are set (or when the site is opened without the API), the form falls back to opening the
+visitor's email app with the request filled in, addressed to both recipients.
+
+## Viewer behaviour
+
+- **Auto-rotate** starts slowly whenever a design is opened and stops as soon as the visitor interacts. The Rotate button toggles it.
+- **Exploded** separates whole sub-assemblies in straight lines parallel to the side view.
+- **Spread 0–100 %** moves every component together onto a work table; back to 0 % reassembles it.
+- **Save image** downloads a PNG of the current view with labels, model name, state and view name.
+- **User manual** downloads the PDF for the selected design.
+
+Keyboard: E exploded, T table layout, L labels, F fit, Esc clear selection.
+
+## Editing text
+
+Customer-facing component text is in `models/compact-5.js`, `models/pro-20.js` and `models/ultra-50.js`.
+
+## Orange slot covers (REUDE standard)
+
+Every DynoX design shows orange T-slot cover strips in the exposed slots of its aluminium extrusions.
+They are generated from the 3D model by `tools/slotcovers.mjs`, which finds each slot, skips the
+lengths covered by brackets and nuts, and appends one cover mesh per extrusion to the GLB (so the
+strips move with their profile in the exploded and table views). In the components list they are one
+item, "Slot cover strips". To add covers to a new model:
+
 ```
-Open **[http://127.0.0.1:8765](http://127.0.0.1:8765)** in your browser.
-
-### Option 2: Node.js (via package.json)
-```bash
-npm start
+node tools/slotcovers.mjs source.glb model/<name>.glb covers.json "<extrusion node indices>"
 ```
 
-### Option 3: VS Code Live Server
-Right-click `index.html` and select **"Open with Live Server"**.
-
----
-
-## Direct URL Stand Parameters
-
-You can navigate directly to any model using URL query parameters:
-* **RTS Compact 5**: `http://127.0.0.1:8765/?stand=compact5`
-* **RTS Pro 20**: `http://127.0.0.1:8765/?stand=pro20`
-* **RTS Ultra 50**: `http://127.0.0.1:8765/?stand=ultra50`
-
----
-
-## Production Deployment
-
-The project is static and requires zero build steps or server-side runtimes.
-
-### Vercel
-1. Push this directory to your GitHub / GitLab repository.
-2. Import the project into Vercel.
-3. Framework Preset: **Other**. Build Command: *leave empty*. Output Directory: `./`.
-4. Deploy. The included `vercel.json` automatically configures caching headers for GLB models.
-
-### Alternative Hosts
-Compatible with any static hosting platform: Netlify, Cloudflare Pages, AWS S3 + CloudFront, or Apache/Nginx.
-
----
-
-## Data & Export Documentation
-
-* **[`dynox_thrust_stands_components.csv`](./dynox_thrust_stands_components.csv)**: Full components table with 77 classified parts across all three stands, formatted with Model ID, Model Name, Rating, Item #, Part Name, Section, Material, Quantity, and Description.
-* **[`DESIGNS_BACKEND_DOCUMENTATION.md`](./DESIGNS_BACKEND_DOCUMENTATION.md)**: Architecture documentation covering the Supabase Storage bucket, PostgreSQL table schema, Row-Level Security policies, and REST API endpoints.
-
----
-
-## License
-
-Proprietary © 2026 REUDE Technologies. All rights reserved.
+then add the printed cover node numbers to the model's catalog in `models/`.
