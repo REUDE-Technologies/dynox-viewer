@@ -8,19 +8,21 @@ const HW = new Set(Object.values(G.hw).flat());
 const P = G.pieces;
 const own = (...ids) => ids.flatMap((id) => P[id]).filter((i) => !COVERS.has(i) && !HW.has(i));
 const HEAD = 150; // the sensing head lifts off the tower in the exploded view
+const BASE = -120; // the base frame drops below the pillars
+const CLAMP = -190; // floor clamps drop below the base
 
-// Exploded view: straight moves parallel to the side view (Y up, Z along thrust); sub-assemblies stay whole.
+// Exploded view: straight moves parallel to the side view (Y up, Z along thrust); every sub-assembly
+// stays whole. Parts fixed to the pillars (handles, top and middle bridges) stay on the tower.
 const EX = {
-  rail_L: [0, -120, 0], rail_R: [0, -120, 0], cross_F: [0, -120, 0], cross_R: [0, -120, 0],
-  uclamp_F: [0, -120, 110], uclamp_R: [0, -120, -110],
-  out_L: [0, -60, 0], out_R: [0, -60, 0], fclamp_L: [0, -90, 0], fclamp_R: [0, -90, 0],
-  brace_FL: [0, 0, 130], brace_FR: [0, 0, 130], brace_RL: [0, 0, -130], brace_RR: [0, 0, -130],
-  brace_SL: [0, 110, 0], brace_SR: [0, 110, 0],
-  bridge_mid: [0, 0, -150], daq: [0, 0, -300], current: [0, 0, 160],
-  handle_L: [0, 0, -120], handle_R: [0, 0, -120],
-  bridge_top: [0, HEAD - 90, 0], vsupport: [0, HEAD, 0], vcell: [0, HEAD, 50], sheet: [0, HEAD, 110],
-  hcells: [0, HEAD, 170], lccover: [0, HEAD + 130, 170], plate: [0, HEAD, 250], vib: [0, HEAD, 250],
-  rpm: [0, HEAD, 290], motor: [0, HEAD, 330], prop: [0, HEAD, 430], encl: [0, HEAD + 420, 0],
+  rail_L: [0, BASE, 0], rail_R: [0, BASE, 0], cross_F: [0, BASE, 0], cross_R: [0, BASE, 0],
+  out_L: [0, BASE, 0], out_R: [0, BASE, 0], brace_SL: [0, BASE, 0], brace_SR: [0, BASE, 0],
+  uclamp_F: [0, CLAMP, 0], uclamp_R: [0, CLAMP, 0], fclamp_L: [0, CLAMP, 0], fclamp_R: [0, CLAMP, 0],
+  brace_FL: [0, 0, 140], brace_FR: [0, 0, 140], brace_RL: [0, 0, -140], brace_RR: [0, 0, -140],
+  daq: [0, 0, -170], current: [0, 0, 100],
+  vsupport: [0, HEAD, 0], vcell: [0, HEAD, 40], sheet: [0, HEAD, 85],
+  hcells: [0, HEAD, 135], lccover: [0, HEAD + 140, 135], rpm: [0, HEAD + 140, 135],
+  plate: [0, HEAD, 205], vib: [0, HEAD, 205], motor: [0, HEAD, 265], prop: [0, HEAD, 345],
+  encl: [0, HEAD + 330, 0],
 };
 // Table layout: braces are rotated about their own axis to lie flat.
 const FLAT = {
@@ -393,7 +395,7 @@ export default {
     },
     {
       s: 'hw', kind: 'hw', name: 'T-slot nuts', code: 'Series 8',
-      qty: 'about 60', mat: 'fastener', nodes: G.hw.tnut,
+      qty: 'about 50', mat: 'fastener', nodes: G.hw.tnut,
       summary: 'Nuts that sit inside the profile slots and take every bracket screw.',
       size: '20 × 25 mm',
       material: 'Printed PLA tee nuts and steel slot nuts',
@@ -403,7 +405,7 @@ export default {
     },
     {
       s: 'hw', kind: 'hw', name: 'M8 screws', code: 'Button and socket head',
-      qty: 'about 60', mat: 'fastener', nodes: G.hw.screw,
+      qty: 'about 50', mat: 'fastener', nodes: G.hw.screw,
       summary: 'Screws that clamp the brackets, handles and enclosure through the slot nuts.',
       size: 'M8 × 16 mm',
       material: 'Steel, black oxide',

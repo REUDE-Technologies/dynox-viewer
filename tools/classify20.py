@@ -4,7 +4,9 @@ D={d['i']:d for d in json.load(open('/home/claude/glb20b/nodes.json'))}
 B={int(d['name'][1:]):d for d in json.load(open('/home/claude/glb20b/nodesb.json'))}
 # graft nodes from the built glb
 for i in (1307,1308,1309): D[i]=B[i]
-for i in (17,18,19,20,21): D.pop(i)
+REMOVED=json.load(open('/home/claude/glb20b/specd.json'))['remove']
+for i in REMOVED: D.pop(i,None)
+CMAP={int(k):v for k,v in json.load(open('/home/claude/glb20b/covermap.json')).items()}
 name=lambda i: ' / '.join(N[i]) if i<len(N) else 'current sensor'
 R=lambda a,b: list(range(a,b+1))
 S={ # structural & named pieces
@@ -19,7 +21,7 @@ S={ # structural & named pieces
  'daq':R(254,1215),'current':[1307,1308,1309],
 }
 taken={i for v in S.values() for i in v}
-cover=[i for i,d in D.items() if d['col']==[0.91,0.19,0] and i not in taken]
+cover=sorted(CMAP.values())
 def kind(i):
     n=name(i).lower()
     if '45deg' in n: return 'ab45'
@@ -41,18 +43,9 @@ PB={k:box(v) for k,v in S.items()}
 PROF=['rail_L','rail_R','cross_F','cross_R','out_L','out_R','pillar_L','pillar_R','bridge_top','bridge_mid','brace_FL','brace_FR','brace_SL','brace_SR','brace_RL','brace_RR']
 pieces={k:list(v) for k,v in S.items()}
 # covers: the profile whose box contains it (smallest gap, prefer containment)
-def inside(c,b,pad=3):
-    # fraction of the cover box that lies inside the (padded) profile box
-    f=1.0
-    for a in range(3):
-        lo=max(c['min'][a],b['min'][a]-pad); hi=min(c['max'][a],b['max'][a]+pad)
-        span=max(c['max'][a]-c['min'][a],1e-6)
-        f*=max(0.0,min(1.0,(hi-lo)/span)) if span>1e-3 else (1.0 if lo<=hi else 0.0)
-    return f
-for i in cover:
-    best=max(PROF,key=lambda k:(inside(D[i],PB[k]), -gap(D[i],PB[k])))
-    # contained check: cover must lie within the profile's extent along its long axis
-    pieces[best].append(i)
+for prof_node,cv in CMAP.items():
+    k=[k for k in PROF if prof_node in S[k]][0]
+    pieces[k].append(cv)
 COV={}
 for k in PROF: COV[k]=[i for i in pieces[k] if i in cover]
 # 90 brackets: priority pillars > bridges > cross > outriggers > rails among touching profiles
